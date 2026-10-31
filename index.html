@@ -5,124 +5,100 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breakfast Express</title>
 <style>
-body{margin:0;font-family:Arial;background:#fff8f1;color:#172033}
-header{background:linear-gradient(120deg,#f97316,#fb923c);color:white;padding:22px 16px}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#fff8ed;color:#333}
+header{background:#f58220;color:white;padding:20px;text-align:center}
 header h1{margin:0}
-main{max-width:850px;margin:auto;padding:16px}
-.card{background:white;border:1px solid #f0e2d5;border-radius:15px;padding:16px;margin:14px 0}
-input,textarea,select,button{width:100%;box-sizing:border-box;padding:12px;margin:6px 0;border-radius:9px;border:1px solid #ddd;font-size:16px}
-button{background:#f97316;color:white;border:0;font-weight:bold}
-.secondary{background:#fff1e6;color:#9a3412}
-.hidden{display:none!important}
-.tabs{display:flex;gap:5px;flex-wrap:wrap}
-.tabs button{width:auto;flex:1}
-.shop,.food,.order{border:1px solid #f0e2d5;border-radius:10px;padding:12px;margin:10px 0}
-.row{display:flex;gap:8px}
-.row>*{flex:1}
-.muted{color:#667085;font-size:14px}
-#status{padding:10px;background:#ecfdf3;margin:10px 0;display:none}
+header p{margin:7px 0 0}
+.container{padding:16px;max-width:650px;margin:auto}
+.card{background:white;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,button,select{width:100%;padding:12px;margin:7px 0;border-radius:7px;border:1px solid #ccc;font-size:16px}
+button{background:#f58220;color:white;border:0;font-weight:bold}
+button:disabled{opacity:.5}
+h2{color:#e56c13}
+.small{font-size:13px;color:#777}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item button{width:100px}
+.hidden{display:none}
 </style>
 </head>
 <body>
 
 <header>
-<h1>🍳 Breakfast Express</h1>
+<h1>🍽️ Breakfast Express</h1>
 <p>તમારો નાસ્તો, હવે તમારા ઘરે!</p>
-<p>Kudasan · Raysan · Sargasan · PDPU</p>
 </header>
 
-<main>
-<div id="status"></div>
+<div class="container">
 
-<section id="authCard" class="card">
-<h2>Welcome</h2>
-<p>Create your account or sign in</p>
+<div class="card" id="loginBox">
+<h2>Customer Login</h2>
 <input id="email" type="email" placeholder="Email address">
-<input id="password" type="password" placeholder="Password (minimum 6 characters)">
-<div class="row">
-<button id="signupBtn">Create account</button>
-<button id="loginBtn" class="secondary">Sign in</button>
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button onclick="signup()">Create Account</button>
+<p id="message" class="small"></p>
 </div>
-</section>
 
-<section id="app" class="hidden">
+<div id="app" class="hidden">
 
 <div class="card">
-<strong>Welcome to Breakfast Express</strong>
-<div id="userEmail" class="muted"></div>
-<button id="logoutBtn" class="secondary">Sign out</button>
+<h2>Welcome!</h2>
+<p id="userEmail"></p>
+<button onclick="logout()">Logout</button>
 </div>
 
-<div class="tabs">
-<button data-tab="browse">Find Breakfast</button>
-<button data-tab="cart" class="secondary">My Cart</button>
-<button data-tab="shop" class="secondary">Register Shop</button>
-<button data-tab="owner" class="secondary">My Shop / Orders</button>
-</div>
-
-<section id="browseTab" class="card">
-<h2>Breakfast Shops</h2>
-<select id="areaFilter">
-<option value="">All areas</option>
+<div class="card">
+<h2>📍 Select Your Area</h2>
+<select id="area">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<div id="shopsList">Loading shops...</div>
-</section>
+</div>
 
-<section id="cartTab" class="card hidden">
-<h2>My Cart</h2>
-<div id="cartList"></div>
-<div id="cartTotal"></div>
-<textarea id="deliveryAddress" placeholder="Full delivery address"></textarea>
-<button id="placeOrderBtn">Place Order</button>
-<p class="muted">Payment: Cash on delivery</p>
-</section>
-
-<section id="shopTab" class="card hidden">
-<h2>Register Your Shop</h2>
+<div class="card">
+<h2>🏪 Register Your Shop</h2>
 <input id="shopName" placeholder="Shop name">
-<input id="shopArea" placeholder="Area">
-<input id="shopPhone" placeholder="Contact number">
-<textarea id="shopAddress" placeholder="Shop address"></textarea>
-<button id="registerShopBtn">Submit Shop</button>
-<p class="muted">Your shop will appear after admin approval.</p>
-</section>
+<input id="shopArea" placeholder="Shop area">
+<input id="shopPhone" placeholder="Phone number">
+<button onclick="registerShop()">Register Shop</button>
+<p class="small">Your shop will appear after approval.</p>
+</div>
 
-<section id="ownerTab" class="card hidden">
-<h2>My Shop & Orders</h2>
-<div id="myShop"></div>
-<div id="ownerOrders"></div>
-</section>
+<div class="card">
+<h2>Available Breakfast Shops</h2>
+<div id="shops">Loading shops...</div>
+</div>
 
-</section>
-</main>
+<div class="card">
+<h2>🛒 Your Cart</h2>
+<div id="cart">Your cart is empty.</div>
+<h3 id="total">Total: ₹0</h3>
+<input id="address" placeholder="Delivery address">
+<input id="phone" placeholder="Mobile number">
+<button onclick="placeOrder()">Place Order - Cash on Delivery</button>
+<p id="orderMessage"></p>
+</div>
+
+<div class="card">
+<h2>Shop Owner Dashboard</h2>
+<div id="ownerOrders">Your shop orders will appear here.</div>
+</div>
+
+</div>
+</div>
 
 <script type="module">
-
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-
 import {
-getAuth,
-createUserWithEmailAndPassword,
-signInWithEmailAndPassword,
-onAuthStateChanged,
-signOut
+getAuth,createUserWithEmailAndPassword,
+signInWithEmailAndPassword,signOut,onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-
 import {
-getFirestore,
-collection,
-doc,
-setDoc,
-getDoc,
-getDocs,
-addDoc,
-query,
-where,
-serverTimestamp
+getFirestore,collection,addDoc,getDocs,
+query,where,doc,updateDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -135,445 +111,160 @@ appId: "1:854726959400:web:fc87228ca991e1a8b4b01d",
 measurementId: "G-S1CFHKMLEY"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-let currentUser = null;
-let cart = [];
-let selectedShop = null;
+let currentUser=null;
+let cart=[];
+let shops=[];
 
-const $ = id => document.getElementById(id);
+window.signup=async()=>{
+try{
+await createUserWithEmailAndPassword(auth,email.value,password.value);
+message.innerText="Account created successfully!";
+}catch(e){message.innerText=e.message;}
+};
 
-function message(text){
-$("status").textContent = text;
-$("status").style.display = "block";
+window.login=async()=>{
+try{
+await signInWithEmailAndPassword(auth,email.value,password.value);
+}catch(e){message.innerText=e.message;}
+};
+
+window.logout=()=>signOut(auth);
+
+onAuthStateChanged(auth,user=>{
+currentUser=user;
+loginBox.classList.toggle("hidden",!!user);
+document.getElementById("app").classList.toggle("hidden",!user);
+if(user){
+userEmail.innerText=user.email;
+loadShops();
+loadOwnerOrders();
+}
+});
+
+window.registerShop=async()=>{
+if(!shopName.value||!shopArea.value||!shopPhone.value){
+alert("Please enter all shop details");return;
+}
+try{
+await addDoc(collection(db,"shops"),{
+name:shopName.value,
+area:shopArea.value,
+phone:shopPhone.value,
+ownerId:currentUser.uid,
+approved:false,
+menu:[]
+});
+alert("Shop registration submitted for approval!");
+shopName.value="";
+shopArea.value="";
+shopPhone.value="";
+}catch(e){alert(e.message);}
+};
+
+async function loadShops(){
+shops=[];
+const snapshot=await getDocs(collection(db,"shops"));
+snapshot.forEach(d=>{
+const s=d.data();
+if(s.approved===true)shops.push({id:d.id,...s});
+});
+showShops();
 }
 
-function escapeHTML(text=""){
-return String(text).replace(/[&<>"']/g,c=>({
+function showShops(){
+const box=document.getElementById("shops");
+box.innerHTML="";
+if(!shops.length){
+box.innerHTML="No approved shops yet. Please check again later.";
+return;
+}
+shops.forEach(s=>{
+const div=document.createElement("div");
+div.className="card";
+div.innerHTML=`<h3>${escapeHTML(s.name)}</h3>
+<p>📍 ${escapeHTML(s.area||"")}</p>
+<div id="menu-${s.id}"></div>`;
+box.appendChild(div);
+(s.menu||[]).forEach((m,i)=>{
+const row=document.createElement("div");
+row.className="item";
+const label=document.createElement("span");
+label.textContent=m.name+" - ₹"+m.price;
+const btn=document.createElement("button");
+btn.textContent="Add";
+btn.onclick=()=>addToCart(s.id,s.name,m);
+row.append(label,btn);
+div.querySelector("#menu-"+s.id).appendChild(row);
+});
+});
+}
+
+function escapeHTML(value){
+return String(value).replace(/[&<>"']/g,c=>({
 "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
 }[c]));
 }
 
-function showTab(name){
-["browse","cart","shop","owner"].forEach(t=>{
-$(t+"Tab").classList.toggle("hidden",t!==name);
-document.querySelector(`[data-tab="${t}"]`).classList.toggle("secondary",t!==name);
-});
-
-if(name==="browse") loadShops();
-if(name==="cart") renderCart();
-if(name==="owner") loadOwnerArea();
+window.addToCart=(shopId,shopName,item)=>{
+if(cart.length && cart[0].shopId!==shopId){
+alert("Please order from one shop at a time.");return;
 }
-
-document.querySelectorAll("[data-tab]").forEach(button=>{
-button.onclick=()=>showTab(button.dataset.tab);
-});
-
-$("signupBtn").onclick=async()=>{
-try{
-const email=$("email").value.trim();
-const password=$("password").value;
-
-if(password.length<6) throw new Error("Password must be at least 6 characters.");
-
-const result=await createUserWithEmailAndPassword(auth,email,password);
-
-await setDoc(doc(db,"users",result.user.uid),{
-email:email,
-role:"customer",
-createdAt:serverTimestamp()
-});
-
-message("Account created successfully!");
-
-}catch(error){
-message(error.message);
-}
+cart.push({shopId,shopName,name:item.name,price:Number(item.price)});
+showCart();
 };
 
-$("loginBtn").onclick=async()=>{
-try{
-await signInWithEmailAndPassword(
-auth,
-$("email").value.trim(),
-$("password").value
-);
-}catch(error){
-message(error.message);
-}
-};
-
-$("logoutBtn").onclick=()=>signOut(auth);
-
-onAuthStateChanged(auth,user=>{
-currentUser=user;
-
-$("authCard").classList.toggle("hidden",!!user);
-$("app").classList.toggle("hidden",!user);
-
-if(user){
-$("userEmail").textContent=user.email;
-showTab("browse");
-}
-});
-
-async function loadShops(){
-
-const box=$("shopsList");
-box.textContent="Loading shops...";
-
-try{
-
-const snapshot=await getDocs(collection(db,"shops"));
-const area=$("areaFilter").value;
-
-const shops=snapshot.docs.map(d=>({
-id:d.id,...d.data()
-})).filter(shop=>
-shop.approved===true &&
-(!area || shop.area.toLowerCase()===area.toLowerCase())
-);
-
-if(!shops.length){
-box.innerHTML="<p>No approved shops available yet.</p>";
-return;
-}
-
+function showCart(){
+const box=document.getElementById("cart");
 box.innerHTML="";
-
-shops.forEach(shop=>{
-
-const div=document.createElement("div");
-div.className="shop";
-
-div.innerHTML=`
-<h3>${escapeHTML(shop.name)}</h3>
-<p>${escapeHTML(shop.area)}</p>
-<p>${escapeHTML(shop.address||"")}</p>
-<div class="menu"></div>
-`;
-
-box.appendChild(div);
-
-const menuBox=div.querySelector(".menu");
-const menu=shop.menu||[];
-
-if(!menu.length){
-menuBox.innerHTML="<p>Menu not available yet.</p>";
-return;
-}
-
-menu.forEach((item,index)=>{
-
-const food=document.createElement("div");
-food.className="food";
-
-food.innerHTML=`
-<strong>${escapeHTML(item.name)}</strong>
-<p>₹${Number(item.price)}</p>
-<button>Add to Cart</button>
-`;
-
-food.querySelector("button").onclick=()=>{
-
-if(selectedShop && selectedShop.id!==shop.id){
-message("Please order from one shop at a time.");
-return;
-}
-
-selectedShop={id:shop.id,name:shop.name};
-
-cart.push({
-name:item.name,
-price:Number(item.price),
-qty:1
+cart.forEach((item,i)=>{
+const row=document.createElement("p");
+row.textContent=item.name+" - ₹"+item.price;
+box.appendChild(row);
 });
-
-renderCart();
-message("Item added to cart!");
-};
-
-menuBox.appendChild(food);
-
-});
-
-});
-
-}catch(error){
-box.textContent=error.message;
-}
+document.getElementById("total").innerText=
+"Total: ₹"+cart.reduce((a,b)=>a+b.price,0);
+if(!cart.length)box.innerText="Your cart is empty.";
 }
 
-$("areaFilter").onchange=loadShops;
-
-function renderCart(){
-
-const box=$("cartList");
-
-if(!cart.length){
-box.innerHTML="<p>Your cart is empty.</p>";
-$("cartTotal").textContent="";
-return;
-}
-
-box.innerHTML="<h3>"+escapeHTML(selectedShop.name)+"</h3>";
-
-cart.forEach((item,index)=>{
-
-const div=document.createElement("div");
-div.className="food";
-
-div.innerHTML=`
-${escapeHTML(item.name)} × ${item.qty}
-<br>₹${item.price}
-<button class="secondary">Remove</button>
-`;
-
-div.querySelector("button").onclick=()=>{
-cart.splice(index,1);
-if(!cart.length) selectedShop=null;
-renderCart();
-};
-
-box.appendChild(div);
-
-});
-
-const total=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
-
-$("cartTotal").textContent="Total: ₹"+total;
-}
-
-$("placeOrderBtn").onclick=async()=>{
-
+window.placeOrder=async()=>{
+if(!cart.length){alert("Your cart is empty");return;}
+if(!address.value||!phone.value){alert("Enter delivery address and phone");return;}
 try{
-
-if(!cart.length) throw new Error("Your cart is empty.");
-
-const address=$("deliveryAddress").value.trim();
-
-if(address.length<8) throw new Error("Enter your complete delivery address.");
-
-const total=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
-
+const total=cart.reduce((a,b)=>a+b.price,0);
 await addDoc(collection(db,"orders"),{
-
 customerId:currentUser.uid,
 customerEmail:currentUser.email,
-shopId:selectedShop.id,
-shopName:selectedShop.name,
+shopId:cart[0].shopId,
+shopName:cart[0].shopName,
 items:cart,
 total:total,
-address:address,
+address:address.value,
+phone:phone.value,
 status:"New",
-paymentMethod:"Cash on delivery",
-createdAt:serverTimestamp()
-
+createdAt:new Date()
 });
-
+orderMessage.innerText="Order placed successfully!";
 cart=[];
-selectedShop=null;
-$("deliveryAddress").value="";
-renderCart();
-
-message("Your order has been placed successfully!");
-
-}catch(error){
-message(error.message);
-}
-
+showCart();
+loadOwnerOrders();
+}catch(e){orderMessage.innerText=e.message;}
 };
 
-$("registerShopBtn").onclick=async()=>{
-
+async function loadOwnerOrders(){
+const box=document.getElementById("ownerOrders");
+box.innerHTML="Loading...";
 try{
-
-const name=$("shopName").value.trim();
-const area=$("shopArea").value.trim();
-const phone=$("shopPhone").value.trim();
-const address=$("shopAddress").value.trim();
-
-if(!name||!area||!phone||!address){
-throw new Error("Please fill all shop details.");
-}
-
-await addDoc(collection(db,"shops"),{
-
-name,
-area,
-phone,
-address,
-ownerId:currentUser.uid,
-approved:false,
-menu:[],
-createdAt:serverTimestamp()
-
-});
-
-message("Shop registration submitted for approval.");
-
-$("shopName").value="";
-$("shopArea").value="";
-$("shopPhone").value="";
-$("shopAddress").value="";
-
-loadOwnerArea();
-
-}catch(error){
-message(error.message);
-}
-
-};
-
-async function loadOwnerArea(){
-
-const shopBox=$("myShop");
-const orderBox=$("ownerOrders");
-
-try{
-
 const snapshot=await getDocs(
-query(collection(db,"shops"),where("ownerId","==",currentUser.uid))
+query(collection(db,"orders"),where("customerId","==",currentUser.uid))
 );
-
-if(snapshot.empty){
-shopBox.innerHTML="<p>You have not registered a shop yet.</p>";
-orderBox.innerHTML="";
-return;
+box.innerHTML="Your customer orders: "+snapshot.size+
+". Shop-owner order management will be added in the next step.";
+}catch(e){box.innerText=e.message;}
 }
-
-const shops=snapshot.docs.map(d=>({
-id:d.id,...d.data()
-}));
-
-shopBox.innerHTML="";
-
-for(const shop of shops){
-
-const div=document.createElement("div");
-div.className="shop";
-
-div.innerHTML=`
-<h3>${escapeHTML(shop.name)}</h3>
-<p>${shop.approved?"Approved":"Waiting for admin approval"}</p>
-<h3>Menu management</h3>
-<div class="menuItems"></div>
-<input class="foodName" placeholder="Food item name">
-<input class="foodPrice" type="number" placeholder="Price">
-<button>Add Menu Item</button>
-`;
-
-shopBox.appendChild(div);
-
-const menuBox=div.querySelector(".menuItems");
-
-(shop.menu||[]).forEach(item=>{
-const p=document.createElement("p");
-p.textContent=item.name+" - ₹"+item.price;
-menuBox.appendChild(p);
-});
-
-div.querySelector("button").onclick=async()=>{
-
-try{
-
-const name=div.querySelector(".foodName").value.trim();
-const price=Number(div.querySelector(".foodPrice").value);
-
-if(!name||price<=0) throw new Error("Enter food name and price.");
-
-const fresh=await getDoc(doc(db,"shops",shop.id));
-const old=fresh.data();
-
-await setDoc(doc(db,"shops",shop.id),{
-menu:[...(old.menu||[]),{name,price}]
-},{merge:true});
-
-message("Menu item added.");
-loadOwnerArea();
-
-}catch(error){
-message(error.message);
-}
-
-};
-
-}
-
-const allOrders=[];
-
-for(const shop of shops){
-
-const orders=await getDocs(
-query(collection(db,"orders"),where("shopId","==",shop.id))
-);
-
-orders.forEach(d=>{
-allOrders.push({id:d.id,...d.data()});
-});
-
-}
-
-orderBox.innerHTML="<h3>Incoming Orders</h3>";
-
-if(!allOrders.length){
-orderBox.innerHTML+="<p>No orders yet.</p>";
-return;
-}
-
-allOrders.forEach(order=>{
-
-const div=document.createElement("div");
-div.className="order";
-
-div.innerHTML=`
-<strong>Order ${escapeHTML(order.id.slice(-6))}</strong>
-<p>${(order.items||[]).map(i=>escapeHTML(i.name)+" × "+i.qty).join(", ")}</p>
-<p>Total: ₹${order.total}</p>
-<p>Address: ${escapeHTML(order.address)}</p>
-<p>Status: ${escapeHTML(order.status)}</p>
-<select>
-<option>New</option>
-<option>Accepted</option>
-<option>Preparing</option>
-<option>Out for delivery</option>
-<option>Delivered</option>
-<option>Cancelled</option>
-</select>
-<button>Update Status</button>
-`;
-
-orderBox.appendChild(div);
-
-div.querySelector("select").value=order.status||"New";
-
-div.querySelector("button").onclick=async()=>{
-
-try{
-
-await setDoc(doc(db,"orders",order.id),{
-status:div.querySelector("select").value
-},{merge:true});
-
-message("Order status updated.");
-loadOwnerArea();
-
-}catch(error){
-message(error.message);
-}
-
-};
-
-});
-
-}catch(error){
-shopBox.textContent=error.message;
-}
-
-}
-
 </script>
 </body>
 </html>
