@@ -2,103 +2,32 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Breakfast Express</title>
 
 <style>
 *{box-sizing:border-box}
-body{
- margin:0;
- font-family:Arial,sans-serif;
- background:#fff8ed;
- color:#333;
-}
-header{
- background:#ff8c00;
- color:white;
- padding:22px;
- text-align:center;
-}
-header h1{margin:0;font-size:27px}
-nav{
- display:flex;
- justify-content:space-around;
- flex-wrap:wrap;
- background:white;
- padding:12px 3px;
- position:sticky;
- top:0;
- box-shadow:0 2px 5px #ddd;
- z-index:5;
-}
-nav button{
- border:0;
- background:none;
- font-weight:bold;
- padding:8px;
-}
+body{margin:0;font-family:Arial;background:#fff8ed;color:#333}
+header{background:#ff8c00;color:white;text-align:center;padding:20px}
+nav{display:flex;flex-wrap:wrap;justify-content:center;background:white;position:sticky;top:0;padding:10px;z-index:5}
+nav button{border:0;background:white;padding:10px;font-weight:bold}
 .container{padding:15px}
-.banner{
- background:#ffe0a8;
- padding:22px;
- border-radius:15px;
- text-align:center;
- margin-bottom:20px;
-}
-.banner h2{color:#9b4700}
+.banner,.box,.card{background:white;padding:15px;border-radius:12px;margin:12px 0;box-shadow:0 2px 6px #ddd}
+.banner{text-align:center;background:#ffe0a8}
 h2{color:#a54c00}
-.products{
- display:grid;
- grid-template-columns:repeat(2,1fr);
- gap:12px;
-}
-.card{
- background:white;
- border-radius:12px;
- padding:12px;
- box-shadow:0 2px 8px #ddd;
- text-align:center;
-}
-.food{font-size:48px}
-.price{color:#e87500;font-weight:bold}
-button.action,.mainbtn{
- background:#ff8c00;
- color:white;
- border:0;
- padding:11px;
- border-radius:8px;
- width:100%;
- margin-top:8px;
- font-weight:bold;
-}
-.section{
- background:white;
- margin-top:15px;
- padding:15px;
- border-radius:12px;
- box-shadow:0 2px 6px #ddd;
-}
-input,textarea,select{
- width:100%;
- padding:12px;
- margin:7px 0;
- border:1px solid #ccc;
- border-radius:7px;
-}
+input,textarea,select{width:100%;padding:12px;margin:7px 0;border:1px solid #ccc;border-radius:7px}
+button.action{background:#ff8c00;color:white;border:0;border-radius:7px;padding:11px;margin:4px}
+button.danger{background:#d93636;color:white;border:0;border-radius:7px;padding:10px}
+button.success{background:#198754;color:white;border:0;border-radius:7px;padding:10px}
+button{cursor:pointer}
 .hidden{display:none}
-.item{
- display:flex;
- justify-content:space-between;
- padding:10px 0;
- border-bottom:1px solid #ddd;
-}
-footer{
- background:#333;
- color:white;
- padding:20px;
- text-align:center;
- margin-top:25px;
-}
+.products{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.food{font-size:42px;text-align:center}
+.price{color:#e87500;font-weight:bold}
+.card{text-align:center;margin:0}
+.card img{width:100%;height:110px;object-fit:cover;border-radius:8px}
+.item{border-bottom:1px solid #ddd;padding:10px}
+footer{background:#333;color:white;text-align:center;padding:20px;margin-top:20px}
 </style>
 </head>
 
@@ -113,80 +42,90 @@ footer{
 <nav>
 <button onclick="show('home')">🏠 Home</button>
 <button onclick="show('menu')">🍽️ Menu</button>
-<button onclick="show('cart')">🛒 Cart <span id="count">0</span></button>
+<button onclick="show('cart')">🛒 Cart (<span id="count">0</span>)</button>
 <button onclick="show('shop')">🏪 Register Shop</button>
+<button onclick="show('ownerLogin')">👨‍🍳 Shop Owner</button>
 <button onclick="show('admin')">🔐 Admin</button>
 </nav>
 
 <div class="container">
 
 <section id="home">
-
 <div class="banner">
 <h2>Good Morning! ☀️</h2>
-<h3>Start Your Day With Delicious Food</h3>
-<p>Order fresh breakfast and snacks from nearby shops.</p>
-<button class="mainbtn" onclick="show('menu')">ORDER NOW</button>
+<h3>Your Favourite Breakfast Delivered</h3>
+<button class="action" onclick="show('menu')">ORDER NOW</button>
 </div>
-
-<h2>Popular Categories</h2>
-
-<div class="products">
-<div class="card"><div class="food">🥪</div><h3>Sandwich</h3></div>
-<div class="card"><div class="food">🥟</div><h3>Snacks</h3></div>
-<div class="card"><div class="food">🥣</div><h3>Breakfast</h3></div>
-<div class="card"><div class="food">☕</div><h3>Tea & Coffee</h3></div>
-</div>
-
-<h2>🏪 Nearby Breakfast Shops</h2>
+<h2>Nearby Breakfast Shops</h2>
 <div id="approvedShops"></div>
-
 </section>
 
 <section id="menu" class="hidden">
-<h2>Our Breakfast Menu</h2>
-<div class="products" id="products"></div>
+<h2>Breakfast & Snacks</h2>
+<div id="products" class="products"></div>
 </section>
 
 <section id="cart" class="hidden">
-<h2>🛒 Your Cart</h2>
+<h2>🛒 Shopping Cart</h2>
 <div id="cartitems"></div>
 <h3 id="total">Total: ₹0</h3>
-
-<h3>Delivery Details</h3>
-<input id="customer" placeholder="Your Name">
+<input id="customer" placeholder="Customer Name">
 <input id="phone" placeholder="Mobile Number" type="tel">
 <textarea id="address" placeholder="Delivery Address"></textarea>
-
-<button class="mainbtn" onclick="placeOrder()">PLACE ORDER</button>
+<button class="action" onclick="placeOrder()">PLACE ORDER</button>
 </section>
 
 <section id="shop" class="hidden">
 <h2>🏪 Register Your Shop</h2>
-
 <input id="shopname" placeholder="Shop Name">
 <input id="owner" placeholder="Owner Name">
 <input id="shopphone" placeholder="Mobile Number" type="tel">
 <input id="shopaddress" placeholder="Shop Address">
-
+<input id="shoppass" type="password" placeholder="Create Shop Password">
 <select id="category">
 <option>Breakfast</option>
 <option>Snacks</option>
 <option>Breakfast & Snacks</option>
 </select>
-
-<button class="mainbtn" onclick="registerShop()">SUBMIT SHOP</button>
+<button class="action" onclick="registerShop()">SUBMIT SHOP</button>
 <p id="shopmsg"></p>
+</section>
+
+<section id="ownerLogin" class="hidden">
+<h2>👨‍🍳 Shop Owner Login</h2>
+<input id="loginPhone" placeholder="Registered Mobile Number">
+<input id="loginPass" type="password" placeholder="Shop Password">
+<button class="action" onclick="ownerLogin()">LOGIN</button>
+<p id="loginmsg"></p>
+</section>
+
+<section id="dashboard" class="hidden">
+<h2>🏪 Shop Owner Dashboard</h2>
+<div id="ownerInfo"></div>
+
+<div class="box">
+<h3>➕ Add Food Item</h3>
+<input id="foodname" placeholder="Food Name">
+<input id="foodprice" type="number" placeholder="Price ₹">
+<input id="foodimage" placeholder="Food Image URL (optional)">
+<button class="action" onclick="addFood()">ADD FOOD</button>
+</div>
+
+<h3>Your Food Menu</h3>
+<div id="ownerMenu"></div>
+
+<h3>📦 Customer Orders</h3>
+<div id="ownerOrders"></div>
+
+<button class="action" onclick="ownerLogout()">LOGOUT</button>
 </section>
 
 <section id="admin" class="hidden">
 <h2>🔐 Admin Dashboard</h2>
 <p>Demo administration panel</p>
-
 <h3>Shop Registration Requests</h3>
 <div id="shoplist"></div>
-
-<h3>Customer Orders</h3>
+<h3>All Customer Orders</h3>
 <div id="orders"></div>
 </section>
 
@@ -200,20 +139,16 @@ footer{
 
 <script>
 
-const menu=[
-{name:"Poha",price:30,icon:"🥣"},
-{name:"Idli Sambhar",price:50,icon:"🥘"},
-{name:"Dhokla",price:40,icon:"🟨"},
-{name:"Thepla",price:40,icon:"🫓"},
-{name:"Samosa",price:20,icon:"🥟"},
-{name:"Sandwich",price:60,icon:"🥪"},
-{name:"Kachori",price:25,icon:"🥮"},
-{name:"Tea",price:15,icon:"☕"},
-{name:"Coffee",price:30,icon:"☕"},
-{name:"Fafda",price:50,icon:"🍽️"}
-];
-
+let currentOwner=null;
 let cart=[];
+
+function getData(key){
+return JSON.parse(localStorage.getItem(key)||'[]');
+}
+
+function saveData(key,data){
+localStorage.setItem(key,JSON.stringify(data));
+}
 
 function show(id){
 document.querySelectorAll('.container section').forEach(s=>{
@@ -221,188 +156,390 @@ s.classList.add('hidden');
 });
 document.getElementById(id).classList.remove('hidden');
 
-if(id==="cart")renderCart();
-if(id==="admin")renderAdmin();
-if(id==="home")renderShops();
+if(id==='home')renderShops();
+if(id==='cart')renderCart();
+if(id==='admin')renderAdmin();
+if(id==='menu')renderMenu();
+}
+
+function registerShop(){
+
+let name=shopname.value.trim();
+let owner= document.getElementById('owner').value.trim();
+let phone=shopphone.value.trim();
+let address=shopaddress.value.trim();
+let pass=shoppass.value;
+
+if(!name||!owner||!phone||!address||!pass){
+alert('Please fill all fields');
+return;
+}
+
+if(!/^[0-9]{10}$/.test(phone)){
+alert('Enter valid 10 digit mobile number');
+return;
+}
+
+let shops=getData('shops');
+
+if(shops.some(s=>s.phone===phone)){
+alert('This mobile number is already registered');
+return;
+}
+
+shops.push({
+id:Date.now().toString(),
+name,owner,phone,address,
+password:pass,
+category:category.value,
+status:'Pending'
+});
+
+saveData('shops',shops);
+
+shopmsg.innerText='Registration submitted. Please wait for admin approval.';
+
+['shopname','owner','shopphone','shopaddress','shoppass'].forEach(id=>{
+document.getElementById(id).value='';
+});
+}
+
+function renderShops(){
+
+let shops=getData('shops').filter(s=>s.status==='Approved');
+
+approvedShops.innerHTML=shops.map(s=>`
+<div class="box">
+<h3>🏪 ${s.name}</h3>
+<p>📍 ${s.address}</p>
+<p>${s.category}</p>
+<button class="action" onclick="openShop('${s.id}')">VIEW SHOP</button>
+</div>
+`).join('')||'<p>No approved shops available yet.</p>';
+}
+
+function openShop(id){
+let shop=getData('shops').find(s=>s.id===id);
+if(!shop)return;
+
+let foods=getData('foods').filter(f=>f.shopId===id&&f.available);
+
+document.getElementById('products').innerHTML=
+`<h3 style="grid-column:1/-1">${shop.name}</h3>`+
+(foods.map(f=>`
+<div class="card">
+${f.image?`<img src="${f.image}" alt="${f.name}">`:`<div class="food">🍽️</div>`}
+<h3>${f.name}</h3>
+<p class="price">₹${f.price}</p>
+<button class="action" onclick="addToCart('${f.id}')">ADD +</button>
+</div>
+`).join('')||'<p>No food items available.</p>');
+
+show('menu');
 }
 
 function renderMenu(){
-document.getElementById('products').innerHTML=menu.map((p,i)=>`
+
+let foods=getData('foods').filter(f=>f.available);
+
+document.getElementById('products').innerHTML=
+foods.map(f=>`
 <div class="card">
-<div class="food">${p.icon}</div>
-<h3>${p.name}</h3>
-<div class="price">₹${p.price}</div>
-<button class="action" onclick="add(${i})">ADD +</button>
+${f.image?`<img src="${f.image}" alt="${f.name}">`:`<div class="food">🍽️</div>`}
+<h3>${f.name}</h3>
+<p>Shop: ${getData('shops').find(s=>s.id===f.shopId)?.name||'Shop'}</p>
+<p class="price">₹${f.price}</p>
+<button class="action" onclick="addToCart('${f.id}')">ADD +</button>
 </div>
-`).join('');
+`).join('')||'<p>No food items available.</p>';
 }
 
-function add(i){
-cart.push(menu[i]);
+function addToCart(id){
+
+let food=getData('foods').find(f=>f.id===id);
+if(!food||!food.available)return;
+
+if(cart.length&&cart[0].shopId!==food.shopId){
+alert('Please order from one shop at a time. Complete or clear your current cart first.');
+return;
+}
+
+cart.push(food);
 document.getElementById('count').innerText=cart.length;
-alert(menu[i].name+" added to cart!");
+alert(food.name+' added to cart');
 }
 
 function renderCart(){
+
 let total=0;
-let html="";
 
-cart.forEach((p,i)=>{
-total+=p.price;
-html+=`
-<div class="item">
-<span>${p.name} - ₹${p.price}</span>
-<button onclick="removeItem(${i})">❌</button>
+cartitems.innerHTML=cart.map((f,i)=>{
+total+=Number(f.price);
+return `<div class="item">${f.name} - ₹${f.price}
+<button class="danger" onclick="removeCart(${i})">REMOVE</button>
 </div>`;
-});
+}).join('')||'Your cart is empty';
 
-document.getElementById('cartitems').innerHTML=
-html || "Your cart is empty.";
-
-document.getElementById('total').innerText="Total: ₹"+total;
+document.getElementById('total').innerText='Total: ₹'+total;
 }
 
-function removeItem(i){
+function removeCart(i){
 cart.splice(i,1);
 document.getElementById('count').innerText=cart.length;
 renderCart();
 }
 
 function placeOrder(){
-if(cart.length===0){
-alert("Please add food to cart.");
+
+if(!cart.length){
+alert('Your cart is empty');
 return;
 }
 
-let name=document.getElementById('customer').value.trim();
-let phone=document.getElementById('phone').value.trim();
-let address=document.getElementById('address').value.trim();
+let name=customer.value.trim();
+let number=phone.value.trim();
+let addr=address.value.trim();
 
-if(!name||!phone||!address){
-alert("Please fill all delivery details.");
+if(!name||!number||!addr){
+alert('Please enter all delivery details');
 return;
 }
 
-if(!/^[0-9]{10}$/.test(phone)){
-alert("Enter a valid 10 digit mobile number.");
+if(!/^[0-9]{10}$/.test(number)){
+alert('Enter valid mobile number');
 return;
 }
 
-let order={
-name,phone,address,
-items:cart,
-total:cart.reduce((s,p)=>s+p.price,0),
-date:new Date().toLocaleString()
-};
+let orders=getData('orders');
 
-let orders=JSON.parse(localStorage.getItem('orders')||'[]');
-orders.push(order);
-localStorage.setItem('orders',JSON.stringify(orders));
+orders.push({
+id:Date.now().toString(),
+shopId:cart[0].shopId,
+name,phone:number,address:addr,
+items:cart.map(f=>({name:f.name,price:f.price})),
+total:cart.reduce((a,f)=>a+Number(f.price),0),
+date:new Date().toLocaleString(),
+status:'New'
+});
 
-alert("Order placed successfully! (Demo)");
+saveData('orders',orders);
+
+alert('Order placed successfully! Demo order saved.');
 
 cart=[];
 document.getElementById('count').innerText=0;
-document.getElementById('customer').value='';
-document.getElementById('phone').value='';
-document.getElementById('address').value='';
+customer.value='';
+phone.value='';
+address.value='';
 show('home');
 }
 
-function registerShop(){
-let name=document.getElementById('shopname').value.trim();
-let owner=document.getElementById('owner').value.trim();
-let phone=document.getElementById('shopphone').value.trim();
-let address=document.getElementById('shopaddress').value.trim();
+function ownerLogin(){
 
-if(!name||!owner||!phone||!address){
-alert("Please fill all details.");
+let number=loginPhone.value.trim();
+let pass=loginPass.value;
+
+let shop=getData('shops').find(s=>
+s.phone===number&&s.password===pass
+);
+
+if(!shop){
+loginmsg.innerText='Incorrect mobile number or password.';
 return;
 }
 
-if(!/^[0-9]{10}$/.test(phone)){
-alert("Enter a valid 10 digit mobile number.");
+if(shop.status!=='Approved'){
+loginmsg.innerText='Your shop is waiting for admin approval.';
 return;
 }
 
-let shops=JSON.parse(localStorage.getItem('shops')||'[]');
-
-shops.push({
-name,owner,phone,address,
-category:document.getElementById('category').value,
-status:'Pending'
-});
-
-localStorage.setItem('shops',JSON.stringify(shops));
-
-document.getElementById('shopmsg').innerText=
-"Your shop registration submitted successfully!";
-
-['shopname','owner','shopphone','shopaddress'].forEach(id=>{
-document.getElementById(id).value='';
-});
+currentOwner=shop;
+loginmsg.innerText='';
+show('dashboard');
+renderDashboard();
 }
 
-function renderShops(){
-let shops=JSON.parse(localStorage.getItem('shops')||'[]');
-let approved=shops.filter(s=>s.status==='Approved');
+function renderDashboard(){
 
-document.getElementById('approvedShops').innerHTML=
-approved.map(shop=>`
-<div class="section">
-<h3>🏪 ${shop.name}</h3>
-<p>📍 ${shop.address}</p>
-<p>🍽️ ${shop.category}</p>
-<p>📞 ${shop.phone}</p>
-<button class="mainbtn" onclick="show('menu')">VIEW MENU</button>
+if(!currentOwner)return;
+
+ownerInfo.innerHTML=`
+<h3>${currentOwner.name}</h3>
+<p>📍 ${currentOwner.address}</p>
+<p>Category: ${currentOwner.category}</p>
+`;
+
+let foods=getData('foods').filter(f=>f.shopId===currentOwner.id);
+
+ownerMenu.innerHTML=foods.map(f=>`
+<div class="box">
+<b>${f.name}</b> - ₹${f.price}<br>
+${f.image?`<img src="${f.image}" width="100" alt="Food">`:''}
+<p>Status: ${f.available?'Available':'Out of Stock'}</p>
+<button class="action" onclick="editFood('${f.id}')">EDIT</button>
+<button class="action" onclick="toggleFood('${f.id}')">
+${f.available?'OUT OF STOCK':'MAKE AVAILABLE'}
+</button>
+<button class="danger" onclick="deleteFood('${f.id}')">DELETE</button>
 </div>
-`).join('')||'<p>No approved shops available yet. Register your shop to join us!</p>';
+`).join('')||'No food items added yet.';
+
+let orders=getData('orders').filter(o=>o.shopId===currentOwner.id);
+
+ownerOrders.innerHTML=orders.map(o=>`
+<div class="box">
+<b>Order #${o.id}</b>
+<p>Customer: ${o.name}</p>
+<p>Phone: ${o.phone}</p>
+<p>Address: ${o.address}</p>
+<p>Items: ${o.items.map(i=>i.name+' ₹'+i.price).join(', ')}</p>
+<p>Total: ₹${o.total}</p>
+<p>Status: ${o.status}</p>
+<button class="success" onclick="completeOrder('${o.id}')">MARK COMPLETED</button>
+</div>
+`).join('')||'No orders received yet.';
+}
+
+function addFood(){
+
+if(!currentOwner)return;
+
+let name=foodname.value.trim();
+let price=Number(foodprice.value);
+let image=foodimage.value.trim();
+
+if(!name||!price||price<=0){
+alert('Enter food name and valid price');
+return;
+}
+
+let foods=getData('foods');
+
+foods.push({
+id:Date.now().toString(),
+shopId:currentOwner.id,
+name,price,image,
+available:true
+});
+
+saveData('foods',foods);
+
+foodname.value='';
+foodprice.value='';
+foodimage.value='';
+
+renderDashboard();
+alert('Food item added successfully');
+}
+
+function editFood(id){
+
+let foods=getData('foods');
+let food=foods.find(f=>f.id===id&&f.shopId===currentOwner.id);
+if(!food)return;
+
+let name=prompt('Food name',food.name);
+if(name===null)return;
+
+let price=prompt('Price',food.price);
+if(price===null)return;
+
+if(!name.trim()||!Number(price)||Number(price)<=0){
+alert('Invalid details');
+return;
+}
+
+food.name=name.trim();
+food.price=Number(price);
+
+saveData('foods',foods);
+renderDashboard();
+}
+
+function toggleFood(id){
+
+let foods=getData('foods');
+let food=foods.find(f=>f.id===id&&f.shopId===currentOwner.id);
+if(!food)return;
+
+food.available=!food.available;
+saveData('foods',foods);
+renderDashboard();
+}
+
+function deleteFood(id){
+
+if(!confirm('Delete this food item?'))return;
+
+let foods=getData('foods').filter(f=>
+!(f.id===id&&f.shopId===currentOwner.id)
+);
+
+saveData('foods',foods);
+renderDashboard();
+}
+
+function completeOrder(id){
+
+let orders=getData('orders');
+let order=orders.find(o=>o.id===id&&o.shopId===currentOwner.id);
+if(!order)return;
+
+order.status='Completed';
+saveData('orders',orders);
+renderDashboard();
+}
+
+function ownerLogout(){
+currentOwner=null;
+show('home');
 }
 
 function renderAdmin(){
-let shops=JSON.parse(localStorage.getItem('shops')||'[]');
 
-document.getElementById('shoplist').innerHTML=
-shops.map((s,i)=>`
-<div class="section">
-<b>${s.name}</b><br>
-Owner: ${s.owner}<br>
-Phone: ${s.phone}<br>
-Address: ${s.address}<br>
-Category: ${s.category}<br>
-Status: ${s.status}<br>
+let shops=getData('shops');
+
+shoplist.innerHTML=shops.map((s,i)=>`
+<div class="box">
+<h3>${s.name}</h3>
+<p>Owner: ${s.owner}</p>
+<p>Phone: ${s.phone}</p>
+<p>Address: ${s.address}</p>
+<p>Status: ${s.status}</p>
 ${s.status==='Pending'?
-`<button class="mainbtn" onclick="approve(${i})">APPROVE SHOP</button>`:
+`<button class="success" onclick="approveShop('${s.id}')">APPROVE SHOP</button>`:
 'Approved'}
 </div>
-`).join('')||"No shop registrations.";
+`).join('')||'No shop registrations';
 
-let orders=JSON.parse(localStorage.getItem('orders')||'[]');
-
-document.getElementById('orders').innerHTML=
-orders.map(o=>`
-<div class="section">
-<b>${o.name}</b><br>
-Phone: ${o.phone}<br>
-Address: ${o.address}<br>
-Items: ${o.items.map(x=>x.name).join(', ')}<br>
-Total: ₹${o.total}<br>
-${o.date}
+orders.innerHTML=getData('orders').map(o=>`
+<div class="box">
+<b>${o.name}</b>
+<p>Phone: ${o.phone}</p>
+<p>Shop: ${getData('shops').find(s=>s.id===o.shopId)?.name||'Shop'}</p>
+<p>Items: ${o.items.map(i=>i.name).join(', ')}</p>
+<p>Total: ₹${o.total}</p>
+<p>Status: ${o.status}</p>
 </div>
-`).join('')||"No orders yet.";
+`).join('')||'No orders yet';
 }
 
-function approve(i){
-let shops=JSON.parse(localStorage.getItem('shops')||'[]');
-shops[i].status='Approved';
-localStorage.setItem('shops',JSON.stringify(shops));
+function approveShop(id){
+
+let shops=getData('shops');
+let shop=shops.find(s=>s.id===id);
+if(!shop)return;
+
+shop.status='Approved';
+saveData('shops',shops);
+
 renderAdmin();
-alert("Shop approved successfully!");
 renderShops();
+alert('Shop approved!');
 }
 
-renderMenu();
 renderShops();
+renderMenu();
 
 </script>
 </body>
