@@ -20,21 +20,22 @@ header{
  text-align:center;
 }
 header h1{margin:0;font-size:27px}
-header p{margin:8px 0 0}
 nav{
  display:flex;
  justify-content:space-around;
- background:#fff;
- padding:14px 5px;
+ flex-wrap:wrap;
+ background:white;
+ padding:12px 3px;
  position:sticky;
  top:0;
  box-shadow:0 2px 5px #ddd;
+ z-index:5;
 }
 nav button{
  border:0;
  background:none;
  font-weight:bold;
- font-size:14px;
+ padding:8px;
 }
 .container{padding:15px}
 .banner{
@@ -58,10 +59,9 @@ h2{color:#a54c00}
  box-shadow:0 2px 8px #ddd;
  text-align:center;
 }
-.card .food{font-size:55px}
-.card h3{margin:8px 0}
+.food{font-size:48px}
 .price{color:#e87500;font-weight:bold}
-.card button,.mainbtn{
+button.action,.mainbtn{
  background:#ff8c00;
  color:white;
  border:0;
@@ -73,9 +73,10 @@ h2{color:#a54c00}
 }
 .section{
  background:white;
- margin-top:18px;
+ margin-top:15px;
  padding:15px;
  border-radius:12px;
+ box-shadow:0 2px 6px #ddd;
 }
 input,textarea,select{
  width:100%;
@@ -106,35 +107,40 @@ footer{
 <header>
 <h1>🍳 BREAKFAST EXPRESS</h1>
 <p>Fresh Breakfast • Fast Delivery</p>
+<p>Serving Kudasan</p>
 </header>
 
 <nav>
-<button onclick="show('home')">Home</button>
-<button onclick="show('menu')">Menu</button>
+<button onclick="show('home')">🏠 Home</button>
+<button onclick="show('menu')">🍽️ Menu</button>
 <button onclick="show('cart')">🛒 Cart <span id="count">0</span></button>
-<button onclick="show('shop')">Register Shop</button>
-<button onclick="show('admin')">Admin</button>
+<button onclick="show('shop')">🏪 Register Shop</button>
+<button onclick="show('admin')">🔐 Admin</button>
 </nav>
 
 <div class="container">
 
 <section id="home">
+
 <div class="banner">
 <h2>Good Morning! ☀️</h2>
 <h3>Start Your Day With Delicious Food</h3>
 <p>Order fresh breakfast and snacks from nearby shops.</p>
-<button class="mainbtn" onclick="show('menu')">
-ORDER NOW
-</button>
+<button class="mainbtn" onclick="show('menu')">ORDER NOW</button>
 </div>
 
 <h2>Popular Categories</h2>
+
 <div class="products">
 <div class="card"><div class="food">🥪</div><h3>Sandwich</h3></div>
 <div class="card"><div class="food">🥟</div><h3>Snacks</h3></div>
 <div class="card"><div class="food">🥣</div><h3>Breakfast</h3></div>
-<div class="card"><div class="food">🍵</div><h3>Tea & Coffee</h3></div>
+<div class="card"><div class="food">☕</div><h3>Tea & Coffee</h3></div>
 </div>
+
+<h2>🏪 Nearby Breakfast Shops</h2>
+<div id="approvedShops"></div>
+
 </section>
 
 <section id="menu" class="hidden">
@@ -157,11 +163,10 @@ ORDER NOW
 
 <section id="shop" class="hidden">
 <h2>🏪 Register Your Shop</h2>
-<p>Join Breakfast Express and receive customer orders.</p>
 
 <input id="shopname" placeholder="Shop Name">
 <input id="owner" placeholder="Owner Name">
-<input id="shopphone" placeholder="Mobile Number">
+<input id="shopphone" placeholder="Mobile Number" type="tel">
 <input id="shopaddress" placeholder="Shop Address">
 
 <select id="category">
@@ -170,9 +175,7 @@ ORDER NOW
 <option>Breakfast & Snacks</option>
 </select>
 
-<button class="mainbtn" onclick="registerShop()">
-SUBMIT SHOP
-</button>
+<button class="mainbtn" onclick="registerShop()">SUBMIT SHOP</button>
 <p id="shopmsg"></p>
 </section>
 
@@ -218,8 +221,9 @@ s.classList.add('hidden');
 });
 document.getElementById(id).classList.remove('hidden');
 
-if(id==="cart") renderCart();
-if(id==="admin") renderAdmin();
+if(id==="cart")renderCart();
+if(id==="admin")renderAdmin();
+if(id==="home")renderShops();
 }
 
 function renderMenu(){
@@ -228,7 +232,7 @@ document.getElementById('products').innerHTML=menu.map((p,i)=>`
 <div class="food">${p.icon}</div>
 <h3>${p.name}</h3>
 <div class="price">₹${p.price}</div>
-<button onclick="add(${i})">ADD +</button>
+<button class="action" onclick="add(${i})">ADD +</button>
 </div>
 `).join('');
 }
@@ -270,12 +274,17 @@ alert("Please add food to cart.");
 return;
 }
 
-let name=document.getElementById('customer').value;
-let phone=document.getElementById('phone').value;
-let address=document.getElementById('address').value;
+let name=document.getElementById('customer').value.trim();
+let phone=document.getElementById('phone').value.trim();
+let address=document.getElementById('address').value.trim();
 
-if(!name || !phone || !address){
+if(!name||!phone||!address){
 alert("Please fill all delivery details.");
+return;
+}
+
+if(!/^[0-9]{10}$/.test(phone)){
+alert("Enter a valid 10 digit mobile number.");
 return;
 }
 
@@ -294,17 +303,25 @@ alert("Order placed successfully! (Demo)");
 
 cart=[];
 document.getElementById('count').innerText=0;
+document.getElementById('customer').value='';
+document.getElementById('phone').value='';
+document.getElementById('address').value='';
 show('home');
 }
 
 function registerShop(){
-let name=document.getElementById('shopname').value;
-let owner=document.getElementById('owner').value;
-let phone=document.getElementById('shopphone').value;
-let address=document.getElementById('shopaddress').value;
+let name=document.getElementById('shopname').value.trim();
+let owner=document.getElementById('owner').value.trim();
+let phone=document.getElementById('shopphone').value.trim();
+let address=document.getElementById('shopaddress').value.trim();
 
 if(!name||!owner||!phone||!address){
 alert("Please fill all details.");
+return;
+}
+
+if(!/^[0-9]{10}$/.test(phone)){
+alert("Enter a valid 10 digit mobile number.");
 return;
 }
 
@@ -319,11 +336,27 @@ status:'Pending'
 localStorage.setItem('shops',JSON.stringify(shops));
 
 document.getElementById('shopmsg').innerText=
-"Your shop registration has been submitted!";
+"Your shop registration submitted successfully!";
 
 ['shopname','owner','shopphone','shopaddress'].forEach(id=>{
 document.getElementById(id).value='';
 });
+}
+
+function renderShops(){
+let shops=JSON.parse(localStorage.getItem('shops')||'[]');
+let approved=shops.filter(s=>s.status==='Approved');
+
+document.getElementById('approvedShops').innerHTML=
+approved.map(shop=>`
+<div class="section">
+<h3>🏪 ${shop.name}</h3>
+<p>📍 ${shop.address}</p>
+<p>🍽️ ${shop.category}</p>
+<p>📞 ${shop.phone}</p>
+<button class="mainbtn" onclick="show('menu')">VIEW MENU</button>
+</div>
+`).join('')||'<p>No approved shops available yet. Register your shop to join us!</p>';
 }
 
 function renderAdmin(){
@@ -342,7 +375,7 @@ ${s.status==='Pending'?
 `<button class="mainbtn" onclick="approve(${i})">APPROVE SHOP</button>`:
 'Approved'}
 </div>
-`).join('') || "No shop registrations.";
+`).join('')||"No shop registrations.";
 
 let orders=JSON.parse(localStorage.getItem('orders')||'[]');
 
@@ -356,7 +389,7 @@ Items: ${o.items.map(x=>x.name).join(', ')}<br>
 Total: ₹${o.total}<br>
 ${o.date}
 </div>
-`).join('') || "No orders yet.";
+`).join('')||"No orders yet.";
 }
 
 function approve(i){
@@ -364,10 +397,12 @@ let shops=JSON.parse(localStorage.getItem('shops')||'[]');
 shops[i].status='Approved';
 localStorage.setItem('shops',JSON.stringify(shops));
 renderAdmin();
-alert("Shop approved!");
+alert("Shop approved successfully!");
+renderShops();
 }
 
 renderMenu();
+renderShops();
 
 </script>
 </body>
