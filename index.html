@@ -2,269 +2,373 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Breakfast Express</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#fff8ed;color:#333}
-header{background:#f58220;color:white;padding:20px;text-align:center}
-header h1{margin:0}
-header p{margin:7px 0 0}
-.container{padding:16px;max-width:650px;margin:auto}
-.card{background:white;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
-input,button,select{width:100%;padding:12px;margin:7px 0;border-radius:7px;border:1px solid #ccc;font-size:16px}
-button{background:#f58220;color:white;border:0;font-weight:bold}
-button:disabled{opacity:.5}
-h2{color:#e56c13}
-.small{font-size:13px;color:#777}
-.item{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.item button{width:100px}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#fff8ed;
+ color:#333;
+}
+header{
+ background:#ff8c00;
+ color:white;
+ padding:22px;
+ text-align:center;
+}
+header h1{margin:0;font-size:27px}
+header p{margin:8px 0 0}
+nav{
+ display:flex;
+ justify-content:space-around;
+ background:#fff;
+ padding:14px 5px;
+ position:sticky;
+ top:0;
+ box-shadow:0 2px 5px #ddd;
+}
+nav button{
+ border:0;
+ background:none;
+ font-weight:bold;
+ font-size:14px;
+}
+.container{padding:15px}
+.banner{
+ background:#ffe0a8;
+ padding:22px;
+ border-radius:15px;
+ text-align:center;
+ margin-bottom:20px;
+}
+.banner h2{color:#9b4700}
+h2{color:#a54c00}
+.products{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:12px;
+}
+.card{
+ background:white;
+ border-radius:12px;
+ padding:12px;
+ box-shadow:0 2px 8px #ddd;
+ text-align:center;
+}
+.card .food{font-size:55px}
+.card h3{margin:8px 0}
+.price{color:#e87500;font-weight:bold}
+.card button,.mainbtn{
+ background:#ff8c00;
+ color:white;
+ border:0;
+ padding:11px;
+ border-radius:8px;
+ width:100%;
+ margin-top:8px;
+ font-weight:bold;
+}
+.section{
+ background:white;
+ margin-top:18px;
+ padding:15px;
+ border-radius:12px;
+}
+input,textarea,select{
+ width:100%;
+ padding:12px;
+ margin:7px 0;
+ border:1px solid #ccc;
+ border-radius:7px;
+}
 .hidden{display:none}
+.item{
+ display:flex;
+ justify-content:space-between;
+ padding:10px 0;
+ border-bottom:1px solid #ddd;
+}
+footer{
+ background:#333;
+ color:white;
+ padding:20px;
+ text-align:center;
+ margin-top:25px;
+}
 </style>
 </head>
+
 <body>
 
 <header>
-<h1>🍽️ Breakfast Express</h1>
-<p>તમારો નાસ્તો, હવે તમારા ઘરે!</p>
+<h1>🍳 BREAKFAST EXPRESS</h1>
+<p>Fresh Breakfast • Fast Delivery</p>
 </header>
+
+<nav>
+<button onclick="show('home')">Home</button>
+<button onclick="show('menu')">Menu</button>
+<button onclick="show('cart')">🛒 Cart <span id="count">0</span></button>
+<button onclick="show('shop')">Register Shop</button>
+<button onclick="show('admin')">Admin</button>
+</nav>
 
 <div class="container">
 
-<div class="card" id="loginBox">
-<h2>Customer Login</h2>
-<input id="email" type="email" placeholder="Email address">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<button onclick="signup()">Create Account</button>
-<p id="message" class="small"></p>
+<section id="home">
+<div class="banner">
+<h2>Good Morning! ☀️</h2>
+<h3>Start Your Day With Delicious Food</h3>
+<p>Order fresh breakfast and snacks from nearby shops.</p>
+<button class="mainbtn" onclick="show('menu')">
+ORDER NOW
+</button>
 </div>
 
-<div id="app" class="hidden">
-
-<div class="card">
-<h2>Welcome!</h2>
-<p id="userEmail"></p>
-<button onclick="logout()">Logout</button>
+<h2>Popular Categories</h2>
+<div class="products">
+<div class="card"><div class="food">🥪</div><h3>Sandwich</h3></div>
+<div class="card"><div class="food">🥟</div><h3>Snacks</h3></div>
+<div class="card"><div class="food">🥣</div><h3>Breakfast</h3></div>
+<div class="card"><div class="food">🍵</div><h3>Tea & Coffee</h3></div>
 </div>
+</section>
 
-<div class="card">
-<h2>📍 Select Your Area</h2>
-<select id="area">
-<option>Kudasan</option>
-<option>Raysan</option>
-<option>Sargasan</option>
-<option>PDPU</option>
-</select>
-</div>
+<section id="menu" class="hidden">
+<h2>Our Breakfast Menu</h2>
+<div class="products" id="products"></div>
+</section>
 
-<div class="card">
-<h2>🏪 Register Your Shop</h2>
-<input id="shopName" placeholder="Shop name">
-<input id="shopArea" placeholder="Shop area">
-<input id="shopPhone" placeholder="Phone number">
-<button onclick="registerShop()">Register Shop</button>
-<p class="small">Your shop will appear after approval.</p>
-</div>
-
-<div class="card">
-<h2>Available Breakfast Shops</h2>
-<div id="shops">Loading shops...</div>
-</div>
-
-<div class="card">
+<section id="cart" class="hidden">
 <h2>🛒 Your Cart</h2>
-<div id="cart">Your cart is empty.</div>
+<div id="cartitems"></div>
 <h3 id="total">Total: ₹0</h3>
-<input id="address" placeholder="Delivery address">
-<input id="phone" placeholder="Mobile number">
-<button onclick="placeOrder()">Place Order - Cash on Delivery</button>
-<p id="orderMessage"></p>
+
+<h3>Delivery Details</h3>
+<input id="customer" placeholder="Your Name">
+<input id="phone" placeholder="Mobile Number" type="tel">
+<textarea id="address" placeholder="Delivery Address"></textarea>
+
+<button class="mainbtn" onclick="placeOrder()">PLACE ORDER</button>
+</section>
+
+<section id="shop" class="hidden">
+<h2>🏪 Register Your Shop</h2>
+<p>Join Breakfast Express and receive customer orders.</p>
+
+<input id="shopname" placeholder="Shop Name">
+<input id="owner" placeholder="Owner Name">
+<input id="shopphone" placeholder="Mobile Number">
+<input id="shopaddress" placeholder="Shop Address">
+
+<select id="category">
+<option>Breakfast</option>
+<option>Snacks</option>
+<option>Breakfast & Snacks</option>
+</select>
+
+<button class="mainbtn" onclick="registerShop()">
+SUBMIT SHOP
+</button>
+<p id="shopmsg"></p>
+</section>
+
+<section id="admin" class="hidden">
+<h2>🔐 Admin Dashboard</h2>
+<p>Demo administration panel</p>
+
+<h3>Shop Registration Requests</h3>
+<div id="shoplist"></div>
+
+<h3>Customer Orders</h3>
+<div id="orders"></div>
+</section>
+
 </div>
 
-<div class="card">
-<h2>Shop Owner Dashboard</h2>
-<div id="ownerOrders">Your shop orders will appear here.</div>
-</div>
+<footer>
+<h3>🍳 BREAKFAST EXPRESS</h3>
+<p>Your Morning Food Partner</p>
+<p>Serving Kudasan</p>
+</footer>
 
-</div>
-</div>
+<script>
 
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {
-getAuth,createUserWithEmailAndPassword,
-signInWithEmailAndPassword,signOut,onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {
-getFirestore,collection,addDoc,getDocs,
-query,where,doc,updateDoc
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+const menu=[
+{name:"Poha",price:30,icon:"🥣"},
+{name:"Idli Sambhar",price:50,icon:"🥘"},
+{name:"Dhokla",price:40,icon:"🟨"},
+{name:"Thepla",price:40,icon:"🫓"},
+{name:"Samosa",price:20,icon:"🥟"},
+{name:"Sandwich",price:60,icon:"🥪"},
+{name:"Kachori",price:25,icon:"🥮"},
+{name:"Tea",price:15,icon:"☕"},
+{name:"Coffee",price:30,icon:"☕"},
+{name:"Fafda",price:50,icon:"🍽️"}
+];
 
-const firebaseConfig = {
-apiKey: "AIzaSyBmLCgp-lhyVBZ18uIaGs785H55o6LcFi8",
-authDomain: "project-2153778259975197488.firebaseapp.com",
-projectId: "project-2153778259975197488",
-storageBucket: "project-2153778259975197488.firebasestorage.app",
-messagingSenderId: "854726959400",
-appId: "1:854726959400:web:fc87228ca991e1a8b4b01d",
-measurementId: "G-S1CFHKMLEY"
-};
-
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-
-let currentUser=null;
 let cart=[];
-let shops=[];
 
-window.signup=async()=>{
-try{
-await createUserWithEmailAndPassword(auth,email.value,password.value);
-message.innerText="Account created successfully!";
-}catch(e){message.innerText=e.message;}
-};
-
-window.login=async()=>{
-try{
-await signInWithEmailAndPassword(auth,email.value,password.value);
-}catch(e){message.innerText=e.message;}
-};
-
-window.logout=()=>signOut(auth);
-
-onAuthStateChanged(auth,user=>{
-currentUser=user;
-loginBox.classList.toggle("hidden",!!user);
-document.getElementById("app").classList.toggle("hidden",!user);
-if(user){
-userEmail.innerText=user.email;
-loadShops();
-loadOwnerOrders();
-}
+function show(id){
+document.querySelectorAll('.container section').forEach(s=>{
+s.classList.add('hidden');
 });
+document.getElementById(id).classList.remove('hidden');
 
-window.registerShop=async()=>{
-if(!shopName.value||!shopArea.value||!shopPhone.value){
-alert("Please enter all shop details");return;
-}
-try{
-await addDoc(collection(db,"shops"),{
-name:shopName.value,
-area:shopArea.value,
-phone:shopPhone.value,
-ownerId:currentUser.uid,
-approved:false,
-menu:[]
-});
-alert("Shop registration submitted for approval!");
-shopName.value="";
-shopArea.value="";
-shopPhone.value="";
-}catch(e){alert(e.message);}
-};
-
-async function loadShops(){
-shops=[];
-const snapshot=await getDocs(collection(db,"shops"));
-snapshot.forEach(d=>{
-const s=d.data();
-if(s.approved===true)shops.push({id:d.id,...s});
-});
-showShops();
+if(id==="cart") renderCart();
+if(id==="admin") renderAdmin();
 }
 
-function showShops(){
-const box=document.getElementById("shops");
-box.innerHTML="";
-if(!shops.length){
-box.innerHTML="No approved shops yet. Please check again later.";
+function renderMenu(){
+document.getElementById('products').innerHTML=menu.map((p,i)=>`
+<div class="card">
+<div class="food">${p.icon}</div>
+<h3>${p.name}</h3>
+<div class="price">₹${p.price}</div>
+<button onclick="add(${i})">ADD +</button>
+</div>
+`).join('');
+}
+
+function add(i){
+cart.push(menu[i]);
+document.getElementById('count').innerText=cart.length;
+alert(menu[i].name+" added to cart!");
+}
+
+function renderCart(){
+let total=0;
+let html="";
+
+cart.forEach((p,i)=>{
+total+=p.price;
+html+=`
+<div class="item">
+<span>${p.name} - ₹${p.price}</span>
+<button onclick="removeItem(${i})">❌</button>
+</div>`;
+});
+
+document.getElementById('cartitems').innerHTML=
+html || "Your cart is empty.";
+
+document.getElementById('total').innerText="Total: ₹"+total;
+}
+
+function removeItem(i){
+cart.splice(i,1);
+document.getElementById('count').innerText=cart.length;
+renderCart();
+}
+
+function placeOrder(){
+if(cart.length===0){
+alert("Please add food to cart.");
 return;
 }
-shops.forEach(s=>{
-const div=document.createElement("div");
-div.className="card";
-div.innerHTML=`<h3>${escapeHTML(s.name)}</h3>
-<p>📍 ${escapeHTML(s.area||"")}</p>
-<div id="menu-${s.id}"></div>`;
-box.appendChild(div);
-(s.menu||[]).forEach((m,i)=>{
-const row=document.createElement("div");
-row.className="item";
-const label=document.createElement("span");
-label.textContent=m.name+" - ₹"+m.price;
-const btn=document.createElement("button");
-btn.textContent="Add";
-btn.onclick=()=>addToCart(s.id,s.name,m);
-row.append(label,btn);
-div.querySelector("#menu-"+s.id).appendChild(row);
-});
-});
+
+let name=document.getElementById('customer').value;
+let phone=document.getElementById('phone').value;
+let address=document.getElementById('address').value;
+
+if(!name || !phone || !address){
+alert("Please fill all delivery details.");
+return;
 }
 
-function escapeHTML(value){
-return String(value).replace(/[&<>"']/g,c=>({
-"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-}[c]));
-}
-
-window.addToCart=(shopId,shopName,item)=>{
-if(cart.length && cart[0].shopId!==shopId){
-alert("Please order from one shop at a time.");return;
-}
-cart.push({shopId,shopName,name:item.name,price:Number(item.price)});
-showCart();
-};
-
-function showCart(){
-const box=document.getElementById("cart");
-box.innerHTML="";
-cart.forEach((item,i)=>{
-const row=document.createElement("p");
-row.textContent=item.name+" - ₹"+item.price;
-box.appendChild(row);
-});
-document.getElementById("total").innerText=
-"Total: ₹"+cart.reduce((a,b)=>a+b.price,0);
-if(!cart.length)box.innerText="Your cart is empty.";
-}
-
-window.placeOrder=async()=>{
-if(!cart.length){alert("Your cart is empty");return;}
-if(!address.value||!phone.value){alert("Enter delivery address and phone");return;}
-try{
-const total=cart.reduce((a,b)=>a+b.price,0);
-await addDoc(collection(db,"orders"),{
-customerId:currentUser.uid,
-customerEmail:currentUser.email,
-shopId:cart[0].shopId,
-shopName:cart[0].shopName,
+let order={
+name,phone,address,
 items:cart,
-total:total,
-address:address.value,
-phone:phone.value,
-status:"New",
-createdAt:new Date()
-});
-orderMessage.innerText="Order placed successfully!";
-cart=[];
-showCart();
-loadOwnerOrders();
-}catch(e){orderMessage.innerText=e.message;}
+total:cart.reduce((s,p)=>s+p.price,0),
+date:new Date().toLocaleString()
 };
 
-async function loadOwnerOrders(){
-const box=document.getElementById("ownerOrders");
-box.innerHTML="Loading...";
-try{
-const snapshot=await getDocs(
-query(collection(db,"orders"),where("customerId","==",currentUser.uid))
-);
-box.innerHTML="Your customer orders: "+snapshot.size+
-". Shop-owner order management will be added in the next step.";
-}catch(e){box.innerText=e.message;}
+let orders=JSON.parse(localStorage.getItem('orders')||'[]');
+orders.push(order);
+localStorage.setItem('orders',JSON.stringify(orders));
+
+alert("Order placed successfully! (Demo)");
+
+cart=[];
+document.getElementById('count').innerText=0;
+show('home');
 }
+
+function registerShop(){
+let name=document.getElementById('shopname').value;
+let owner=document.getElementById('owner').value;
+let phone=document.getElementById('shopphone').value;
+let address=document.getElementById('shopaddress').value;
+
+if(!name||!owner||!phone||!address){
+alert("Please fill all details.");
+return;
+}
+
+let shops=JSON.parse(localStorage.getItem('shops')||'[]');
+
+shops.push({
+name,owner,phone,address,
+category:document.getElementById('category').value,
+status:'Pending'
+});
+
+localStorage.setItem('shops',JSON.stringify(shops));
+
+document.getElementById('shopmsg').innerText=
+"Your shop registration has been submitted!";
+
+['shopname','owner','shopphone','shopaddress'].forEach(id=>{
+document.getElementById(id).value='';
+});
+}
+
+function renderAdmin(){
+let shops=JSON.parse(localStorage.getItem('shops')||'[]');
+
+document.getElementById('shoplist').innerHTML=
+shops.map((s,i)=>`
+<div class="section">
+<b>${s.name}</b><br>
+Owner: ${s.owner}<br>
+Phone: ${s.phone}<br>
+Address: ${s.address}<br>
+Category: ${s.category}<br>
+Status: ${s.status}<br>
+${s.status==='Pending'?
+`<button class="mainbtn" onclick="approve(${i})">APPROVE SHOP</button>`:
+'Approved'}
+</div>
+`).join('') || "No shop registrations.";
+
+let orders=JSON.parse(localStorage.getItem('orders')||'[]');
+
+document.getElementById('orders').innerHTML=
+orders.map(o=>`
+<div class="section">
+<b>${o.name}</b><br>
+Phone: ${o.phone}<br>
+Address: ${o.address}<br>
+Items: ${o.items.map(x=>x.name).join(', ')}<br>
+Total: ₹${o.total}<br>
+${o.date}
+</div>
+`).join('') || "No orders yet.";
+}
+
+function approve(i){
+let shops=JSON.parse(localStorage.getItem('shops')||'[]');
+shops[i].status='Approved';
+localStorage.setItem('shops',JSON.stringify(shops));
+renderAdmin();
+alert("Shop approved!");
+}
+
+renderMenu();
+
 </script>
 </body>
 </html>
