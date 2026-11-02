@@ -1,80 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Breakfast Express</title>
 <style>
-body{font-family:Arial;margin:0;background:#fff8ed;color:#333}
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;margin:0;background:#fff8ed;color:#333}
 header{background:#e87516;color:white;padding:20px;text-align:center}
-.container{padding:15px;max-width:650px;margin:auto}
-.card{background:white;padding:15px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
-input,select,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box;border-radius:7px;border:1px solid #ccc;font-size:15px}
-button{background:#e87516;color:white;border:0;font-weight:bold}
+.container{padding:15px;max-width:700px;margin:auto}
+.card{background:white;padding:16px;margin:14px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,select,button{width:100%;padding:12px;margin:7px 0;border-radius:7px;border:1px solid #ccc;font-size:15px}
+button{background:#e87516;color:white;border:0;font-weight:bold;cursor:pointer}
 .secondary{background:#444}
-.hidden{display:none}
+.hidden{display:none!important}
 h2{color:#d96712}
-.item{border-bottom:1px solid #ddd;padding:10px 0}
+.item{border-bottom:1px solid #ddd;padding:12px 0}
+.small{font-size:13px;color:#666}
 </style>
 </head>
-<body>
-
-<header>
+<body><header>
 <h1>🍽️ Breakfast Express</h1>
 <p>તમારો નાસ્તો, હવે તમારા ઘરે!</p>
-</header>
-
-<div class="container">
-
-<div class="card" id="auth">
+</header><div class="container"><div class="card" id="authSection">
 <h2>Login / Register</h2>
-<input id="email" type="email" placeholder="Email address">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<button onclick="register()">Create Account</button>
-<p id="message"></p>
-</div>
-
-<div id="app" class="hidden">
-
-<div class="card">
+<input id="emailInput" type="email" placeholder="Email address">
+<input id="passwordInput" type="password" placeholder="Password">
+<button id="loginButton">Login</button>
+<button id="registerButton">Create Account</button>
+<p id="authMessage"></p>
+</div><div id="appSection" class="hidden"><div class="card">
 <h2>Welcome!</h2>
 <p id="userEmail"></p>
-<button onclick="logout()" class="secondary">Logout</button>
-</div>
-
-<div class="card">
+<button id="logoutButton" class="secondary">Logout</button>
+</div><div class="card">
 <h2>Register Your Shop</h2>
-<input id="shopName" placeholder="Shop name">
-<input id="ownerName" placeholder="Owner name">
-<input id="shopPhone" placeholder="Mobile number">
-<input id="shopAddress" placeholder="Shop address">
-<select id="shopArea">
+<input id="shopNameInput" placeholder="Shop name">
+<input id="ownerNameInput" placeholder="Owner name">
+<input id="shopPhoneInput" placeholder="Mobile number">
+<input id="shopAddressInput" placeholder="Shop address">
+<select id="shopAreaInput">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<button onclick="registerShop()">Submit Shop for Approval</button>
-</div>
-
-<div class="card">
+<button id="shopRegisterButton">Submit Shop for Approval</button>
+<p id="shopMessage"></p>
+</div><div class="card">
 <h2>Available Shops</h2>
-<div id="shops">Loading shops...</div>
-</div>
-
-<div class="card">
+<div id="shopsList">Loading shops...</div>
+</div><div class="card">
 <h2>My Orders</h2>
-<div id="myOrders"></div>
-</div>
-
-<div class="card hidden" id="adminPanel">
-<h2>👑 Admin Dashboard</h2>
-<h3>Shop Registrations</h3>
-<div id="adminShops"></div>
-<h3>All Orders</h3>
-<div id="adminOrders"></div>
-<h3>Add Shop Manually</h3>
+<div id="myOrdersList"></div>
+</div><div class="card hidden" id="adminPanel">
+<h2>👑 Admin Dashboard</h2><h3>Shop Registrations</h3>
+<div id="adminShopsList"></div><h3>Add Shop Manually</h3>
 <input id="newShopName" placeholder="Shop name">
 <input id="newShopPhone" placeholder="Phone">
 <input id="newShopAddress" placeholder="Address">
@@ -84,29 +64,38 @@ h2{color:#d96712}
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<button onclick="addShop()">Add Approved Shop</button>
-</div>
+<button id="addShopButton">Add Approved Shop</button><h3>All Customer Orders</h3>
+<div id="adminOrdersList"></div>
+</div></div>
+</div><script type="module">
 
-</div>
-</div>
-
-<script type="module">
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-getAuth, createUserWithEmailAndPassword,
-signInWithEmailAndPassword, signOut,
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+signOut,
 onAuthStateChanged
-} from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
-getFirestore, collection, addDoc, getDocs,
-query, where, doc, updateDoc, deleteDoc,
+getFirestore,
+collection,
+addDoc,
+getDocs,
+query,
+where,
+doc,
+updateDoc,
+deleteDoc,
 serverTimestamp
-} from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
 
 const firebaseConfig = {
 apiKey: "AIzaSyBmLCgp-lhyVBZ18uIaGs785H55o6LcFi8",
@@ -118,197 +107,380 @@ appId: "1:854726959400:web:fc87228ca991e1a8b4b01d",
 measurementId: "G-S1CFHKMLEY"
 };
 
-const appFirebase = initializeApp(firebaseConfig);
-const auth = getAuth(appFirebase);
-const db = getFirestore(appFirebase);
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
 
 const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
 
-window.login = async function(){
-try{
-await signInWithEmailAndPassword(auth,email.value,password.value);
-message.innerText="Login successful";
-}catch(e){message.innerText=e.message;}
-};
+$("loginButton").addEventListener("click", async () => {
+  const email = $("emailInput").value.trim();
+  const password = $("passwordInput").value;
 
-window.register = async function(){
-try{
-await createUserWithEmailAndPassword(auth,email.value,password.value);
-message.innerText="Account created";
-}catch(e){message.innerText=e.message;}
-};
+  $("authMessage").textContent = "Logging in...";
 
-window.logout = async function(){
-await signOut(auth);
-};
-
-onAuthStateChanged(auth,async user=>{
-authDiv(user);
-if(user){
-await loadShops();
-await loadOrders();
-if(user.uid===ADMIN_UID){
-adminPanel.classList.remove("hidden");
-await loadAdmin();
-}
-}
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    $("authMessage").textContent = "Login successful!";
+  } catch (error) {
+    $("authMessage").textContent = error.message;
+  }
 });
 
-function authDiv(user){
-auth.classList.toggle("hidden",!!user);
-document.getElementById("app").classList.toggle("hidden",!user);
-if(user)userEmail.innerText=user.email;
-}
+$("registerButton").addEventListener("click", async () => {
+  const email = $("emailInput").value.trim();
+  const password = $("passwordInput").value;
 
-window.registerShop = async function(){
-const user=auth.currentUser;
-if(!user)return alert("Please login first");
+  $("authMessage").textContent = "Creating account...";
 
-try{
-await addDoc(collection(db,"shops"),{
-name:shopName.value,
-ownerName:ownerName.value,
-phone:shopPhone.value,
-address:shopAddress.value,
-area:shopArea.value,
-ownerId:user.uid,
-approved:false,
-active:true,
-menu:[],
-createdAt:serverTimestamp()
-});
-alert("Shop registration submitted for admin approval");
-}catch(e){alert(e.message);}
-};
-
-async function loadShops(){
-try{
-const q=query(collection(db,"shops"),
-where("approved","==",true),
-where("active","==",true));
-const snap=await getDocs(q);
-shops.innerHTML="";
-snap.forEach(d=>{
-const s=d.data();
-shops.innerHTML+=`
-<div class="item">
-<h3>${s.name}</h3>
-<p>${s.area} | ${s.address||""}</p>
-<p>Phone: ${s.phone||""}</p>
-<button onclick="orderShop('${d.id}','${s.name}')">Place Order</button>
-</div>`;
-});
-if(snap.empty)shops.innerText="No approved shops available yet.";
-}catch(e){shops.innerText=e.message;}
-}
-
-window.orderShop = async function(id,name){
-const item=prompt("Enter food item and quantity:");
-if(!item)return;
-const price=Number(prompt("Enter total amount (₹):"));
-if(!Number.isFinite(price)||price<=0)return alert("Enter a valid amount");
-
-const address=prompt("Enter delivery address:");
-if(!address)return;
-
-try{
-await addDoc(collection(db,"orders"),{
-customerId:auth.currentUser.uid,
-shopId:id,
-shopName:name,
-items:item,
-total:price,
-address:address,
-status:"New",
-createdAt:serverTimestamp()
-});
-alert("Order placed successfully");
-await loadOrders();
-}catch(e){alert(e.message);}
-};
-
-async function loadOrders(){
-try{
-const q=query(collection(db,"orders"),
-where("customerId","==",auth.currentUser.uid));
-const snap=await getDocs(q);
-myOrders.innerHTML="";
-snap.forEach(d=>{
-const o=d.data();
-myOrders.innerHTML+=`<div class="item">
-${o.shopName}<br>${o.items}<br>
-₹${o.total}<br>Status: ${o.status}
-</div>`;
-});
-}catch(e){myOrders.innerText=e.message;}
-}
-
-async function loadAdmin(){
-const shopSnap=await getDocs(collection(db,"shops"));
-adminShops.innerHTML="";
-shopSnap.forEach(d=>{
-const s=d.data();
-adminShops.innerHTML+=`
-<div class="item">
-<b>${s.name}</b> - ${s.area}
-<p>${s.approved?"Approved":"Pending"}</p>
-<button onclick="approveShop('${d.id}')">Approve Shop</button>
-<button class="secondary" onclick="removeShop('${d.id}')">Delete Shop</button>
-</div>`;
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    $("authMessage").textContent = "Account created successfully!";
+  } catch (error) {
+    $("authMessage").textContent = error.message;
+  }
 });
 
-const orderSnap=await getDocs(collection(db,"orders"));
-adminOrders.innerHTML="";
-orderSnap.forEach(d=>{
-const o=d.data();
-adminOrders.innerHTML+=`
-<div class="item">
-<b>${o.shopName}</b><br>${o.items}<br>
-₹${o.total}<br>${o.address}<br>
-Status: ${o.status}
-<button onclick="completeOrder('${d.id}')">Mark Completed</button>
-</div>`;
+$("logoutButton").addEventListener("click", async () => {
+  await signOut(auth);
 });
+
+onAuthStateChanged(auth, async user => {
+  $("authSection").classList.toggle("hidden", !!user);
+  $("appSection").classList.toggle("hidden", !user);
+
+  if (!user) {
+    $("adminPanel").classList.add("hidden");
+    return;
+  }
+
+  $("userEmail").textContent = user.email || "";
+
+  const isAdmin = user.uid === ADMIN_UID;
+  $("adminPanel").classList.toggle("hidden", !isAdmin);
+
+  await loadShops();
+  await loadMyOrders();
+
+  if (isAdmin) {
+    await loadAdmin();
+  }
+});
+
+$("shopRegisterButton").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const name = $("shopNameInput").value.trim();
+  const ownerName = $("ownerNameInput").value.trim();
+  const phone = $("shopPhoneInput").value.trim();
+  const address = $("shopAddressInput").value.trim();
+
+  if (!name || !phone || !address) {
+    $("shopMessage").textContent = "Please fill in shop name, phone and address.";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "shops"), {
+      name,
+      ownerName,
+      phone,
+      address,
+      area: $("shopAreaInput").value,
+      ownerId: user.uid,
+      approved: false,
+      active: true,
+      menu: [],
+      createdAt: serverTimestamp()
+    });
+
+    $("shopMessage").textContent = "Shop submitted for admin approval.";
+    $("shopNameInput").value = "";
+    $("ownerNameInput").value = "";
+    $("shopPhoneInput").value = "";
+    $("shopAddressInput").value = "";
+
+    if (user.uid === ADMIN_UID) await loadAdmin();
+
+  } catch (error) {
+    $("shopMessage").textContent = error.message;
+  }
+});
+
+async function loadShops() {
+  $("shopsList").textContent = "Loading shops...";
+
+  try {
+    const q = query(
+      collection(db, "shops"),
+      where("approved", "==", true),
+      where("active", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
+    const list = $("shopsList");
+    list.innerHTML = "";
+
+    if (snapshot.empty) {
+      list.textContent = "No approved shops available yet.";
+      return;
+    }
+
+    snapshot.forEach(shopDoc => {
+      const shop = shopDoc.data();
+      const div = document.createElement("div");
+      div.className = "item";
+
+      const name = document.createElement("h3");
+      name.textContent = shop.name || "Shop";
+
+      const details = document.createElement("p");
+      details.textContent =
+        (shop.area || "") + " | " +
+        (shop.address || "") + " | " +
+        (shop.phone || "");
+
+      const button = document.createElement("button");
+      button.textContent = "Place Order";
+      button.addEventListener("click", () =>
+        placeOrder(shopDoc.id, shop.name || "Shop")
+      );
+
+      div.append(name, details, button);
+      list.appendChild(div);
+    });
+
+  } catch (error) {
+    $("shopsList").textContent = error.message;
+  }
 }
 
-window.approveShop=async function(id){
-await updateDoc(doc(db,"shops",id),{approved:true});
-alert("Shop approved");
-await loadAdmin();
-await loadShops();
-};
+async function placeOrder(shopId, shopName) {
+  const items = prompt("Enter food item and quantity:");
+  if (!items) return;
 
-window.removeShop=async function(id){
-if(confirm("Delete this shop?")){
-await deleteDoc(doc(db,"shops",id));
-await loadAdmin();
-await loadShops();
+  const total = Number(prompt("Enter total amount in rupees:"));
+  if (!Number.isFinite(total) || total <= 0) {
+    alert("Please enter a valid amount.");
+    return;
+  }
+
+  const address = prompt("Enter delivery address:");
+  if (!address) return;
+
+  try {
+    await addDoc(collection(db, "orders"), {
+      customerId: auth.currentUser.uid,
+      shopId,
+      shopName,
+      items,
+      total,
+      address,
+      status: "New",
+      createdAt: serverTimestamp()
+    });
+
+    alert("Order placed successfully!");
+    await loadMyOrders();
+
+  } catch (error) {
+    alert(error.message);
+  }
 }
-};
 
-window.completeOrder=async function(id){
-await updateDoc(doc(db,"orders",id),{status:"Completed"});
-await loadAdmin();
-};
+async function loadMyOrders() {
+  $("myOrdersList").textContent = "Loading orders...";
 
-window.addShop=async function(){
-try{
-await addDoc(collection(db,"shops"),{
-name:newShopName.value,
-phone:newShopPhone.value,
-address:newShopAddress.value,
-area:newShopArea.value,
-ownerId:auth.currentUser.uid,
-approved:true,
-active:true,
-menu:[],
-createdAt:serverTimestamp()
+  try {
+    const q = query(
+      collection(db, "orders"),
+      where("customerId", "==", auth.currentUser.uid)
+    );
+
+    const snapshot = await getDocs(q);
+    const list = $("myOrdersList");
+    list.innerHTML = "";
+
+    if (snapshot.empty) {
+      list.textContent = "You have not placed any orders yet.";
+      return;
+    }
+
+    snapshot.forEach(orderDoc => {
+      const order = orderDoc.data();
+      const div = document.createElement("div");
+      div.className = "item";
+
+      const details = document.createElement("p");
+      details.textContent =
+        (order.shopName || "Shop") + " | " +
+        (order.items || "") + " | ₹" +
+        order.total + " | Status: " + order.status;
+
+      div.appendChild(details);
+      list.appendChild(div);
+    });
+
+  } catch (error) {
+    $("myOrdersList").textContent = error.message;
+  }
+}
+
+async function loadAdmin() {
+  try {
+    const shopSnapshot = await getDocs(collection(db, "shops"));
+    const shopList = $("adminShopsList");
+    shopList.innerHTML = "";
+
+    shopSnapshot.forEach(shopDoc => {
+      const shop = shopDoc.data();
+      const div = document.createElement("div");
+      div.className = "item";
+
+      const details = document.createElement("p");
+      details.textContent =
+        (shop.name || "Shop") + " | " +
+        (shop.area || "") + " | " +
+        (shop.approved ? "Approved" : "Pending");
+
+      div.appendChild(details);
+
+      if (!shop.approved) {
+        const approve = document.createElement("button");
+        approve.textContent = "Approve Shop";
+        approve.addEventListener("click", () =>
+          approveShop(shopDoc.id)
+        );
+        div.appendChild(approve);
+      }
+
+      const remove = document.createElement("button");
+      remove.textContent = "Delete Shop";
+      remove.className = "secondary";
+      remove.addEventListener("click", () =>
+        removeShop(shopDoc.id)
+      );
+
+      div.appendChild(remove);
+      shopList.appendChild(div);
+    });
+
+    const orderSnapshot = await getDocs(collection(db, "orders"));
+    const orderList = $("adminOrdersList");
+    orderList.innerHTML = "";
+
+    if (orderSnapshot.empty) {
+      orderList.textContent = "No orders yet.";
+    }
+
+    orderSnapshot.forEach(orderDoc => {
+      const order = orderDoc.data();
+      const div = document.createElement("div");
+      div.className = "item";
+
+      const details = document.createElement("p");
+      details.textContent =
+        (order.shopName || "Shop") + " | " +
+        (order.items || "") + " | ₹" +
+        order.total + " | " +
+        (order.address || "") + " | Status: " +
+        order.status;
+
+      div.appendChild(details);
+
+      if (order.status !== "Completed") {
+        const button = document.createElement("button");
+        button.textContent = "Mark Completed";
+        button.addEventListener("click", () =>
+          completeOrder(orderDoc.id)
+        );
+        div.appendChild(button);
+      }
+
+      orderList.appendChild(div);
+    });
+
+  } catch (error) {
+    $("adminShopsList").textContent = error.message;
+    $("adminOrdersList").textContent = error.message;
+  }
+}
+
+async function approveShop(id) {
+  try {
+    await updateDoc(doc(db, "shops", id), {
+      approved: true
+    });
+    alert("Shop approved!");
+    await loadAdmin();
+    await loadShops();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function removeShop(id) {
+  if (!confirm("Are you sure you want to delete this shop?")) return;
+
+  try {
+    await deleteDoc(doc(db, "shops", id));
+    await loadAdmin();
+    await loadShops();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function completeOrder(id) {
+  try {
+    await updateDoc(doc(db, "orders", id), {
+      status: "Completed"
+    });
+    await loadAdmin();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+$("addShopButton").addEventListener("click", async () => {
+  if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+    alert("Admin access required.");
+    return;
+  }
+
+  const name = $("newShopName").value.trim();
+  if (!name) {
+    alert("Enter shop name.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "shops"), {
+      name,
+      phone: $("newShopPhone").value.trim(),
+      address: $("newShopAddress").value.trim(),
+      area: $("newShopArea").value,
+      ownerId: ADMIN_UID,
+      approved: true,
+      active: true,
+      menu: [],
+      createdAt: serverTimestamp()
+    });
+
+    alert("Shop added successfully!");
+
+    $("newShopName").value = "";
+    $("newShopPhone").value = "";
+    $("newShopAddress").value = "";
+
+    await loadAdmin();
+    await loadShops();
+
+  } catch (error) {
+    alert(error.message);
+  }
 });
-alert("Shop added successfully");
-await loadAdmin();
-await loadShops();
-}catch(e){alert(e.message);}
-};
-</script>
-</body>
+
+</script></body>
 </html>
