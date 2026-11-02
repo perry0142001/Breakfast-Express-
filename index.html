@@ -62,4 +62,956 @@ Welcome, <b id="userEmail"></b>
 <select id="areaFilter" onchange="loadShops()">
 <option value="">All Areas</option>
 <option>Kudasan</option>
-<option>Raysan
+<option>Raysan</option>
+<option>Sargasan</option>
+<option>PDPU</option>
+</select>
+<div id="shopList">Loading shops...</div>
+</div>
+
+<div class="card">
+<h2>🛒 My Cart</h2>
+<div id="cartList">Your cart is empty.</div>
+<p id="cartTotal"></p>
+<textarea id="deliveryAddress" placeholder="Enter your full delivery address"></textarea>
+<select id="paymentMethod">
+<option value="COD">Cash on Delivery</option>
+<option value="UPI">UPI Payment</option>
+</select>
+<button class="green" onclick="placeOrder()">Place Order</button>
+</div>
+
+<div class="card">
+<h2>My Orders</h2>
+<div id="myOrders"></div>
+</div>
+
+</div>
+
+<div id="shopkeeperSection" class="hidden">
+
+<div class="card">
+<h2>Shopkeeper Registration</h2>
+<input id="shopName" placeholder="Shop name">
+<input id="shopPhone" placeholder="Phone number">
+<input id="shopAddress" placeholder="Shop address">
+
+<select id="shopArea">
+<option>Kudasan</option>
+<option>Raysan</option>
+<option>Sargasan</option>
+<option>PDPU</option>
+</select>
+
+<input id="deliveryCharge" type="number" placeholder="Delivery charge">
+<input id="upiId" placeholder="Shop UPI ID (optional)">
+
+<button onclick="registerShop()">Submit Shop for Approval</button>
+<p id="shopMessage"></p>
+</div>
+
+<div class="card">
+<h2>My Shop Status</h2>
+<div id="ownerShop"></div>
+</div>
+
+</div>
+
+<div id="adminSection" class="hidden">
+
+<div class="card">
+<h2>👑 Admin Dashboard</h2>
+<h3>Shop Management</h3>
+<div id="adminShops"></div>
+</div>
+
+<div class="card">
+<h3>Add New Shop</h3>
+<input id="newShopName" placeholder="Shop name">
+<input id="newShopPhone" placeholder="Phone">
+<input id="newShopAddress" placeholder="Address">
+
+<select id="newShopArea">
+<option>Kudasan</option>
+<option>Raysan</option>
+<option>Sargasan</option>
+<option>PDPU</option>
+</select>
+
+<button onclick="adminAddShop()">Add Shop</button>
+</div>
+
+<!-- NEW FOOD MENU MANAGEMENT -->
+
+<div class="card">
+<h2>🍽️ Food Menu Management</h2>
+
+<p>Select a shop to manage its food items and prices.</p>
+
+<select id="menuShopSelect" onchange="loadMenuForAdmin()">
+<option value="">Select Shop</option>
+</select>
+
+<div id="menuEditor" class="hidden">
+
+<h3 id="selectedShopName"></h3>
+
+<input id="foodName" placeholder="Food item name">
+<input id="foodPrice" type="number" min="0" placeholder="Food price ₹">
+<input id="foodImage" placeholder="Food photo URL (optional)">
+
+<p class="small">Paste a public image link if you have one.</p>
+
+<input type="hidden" id="editingFoodId">
+
+<button class="green" onclick="saveFood()">Save Food Item</button>
+<button class="secondary" onclick="clearFoodForm()">Clear</button>
+
+<hr>
+
+<h3>Existing Menu Items</h3>
+<div id="adminFoodList"></div>
+
+</div>
+</div>
+
+<div class="card">
+<h3>Manage Orders</h3>
+<div id="adminOrders"></div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBmLCgp-lhyVBZ18uIaGs785H55o6LcFi8",
+  authDomain: "project-2153778259975197488.firebaseapp.com",
+  projectId: "project-2153778259975197488",
+  storageBucket: "project-2153778259975197488.firebasestorage.app",
+  messagingSenderId: "854726959400",
+  appId: "1:854726959400:web:fc87228ca991e1a8b4b01d"
+};
+
+const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let cart = [];
+let adminShopsCache = [];
+
+function message(id,text){
+  document.getElementById(id).innerText = text;
+}
+
+function login(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password){
+    message("loginMessage","Enter email and password.");
+    return;
+  }
+
+  message("loginMessage","Please wait...");
+
+  auth.signInWithEmailAndPassword(email,password)
+  .catch(error=>{
+    message("loginMessage",error.message);
+  });
+}
+
+function register(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || password.length < 6){
+    message("loginMessage","Enter email and password (minimum 6 characters).");
+    return;
+  }
+
+  message("loginMessage","Creating account...");
+
+  auth.createUserWithEmailAndPassword(email,password)
+  .catch(error=>{
+    message("loginMessage",error.message);
+  });
+}
+
+function logout(){
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(async user=>{
+  currentUser = user;
+
+  document.getElementById("loginSection").classList.toggle("hidden",!!user);
+  document.getElementById("appSection").classList.toggle("hidden",!user);
+
+  if(!user)return;
+
+  document.getElementById("userEmail").innerText = user.email || "";
+
+  ["customerSection","shopkeeperSection","adminSection"].forEach(id=>{
+    document.getElementById(id).classList.add("hidden");
+  });
+
+  if(user.uid === ADMIN_UID){
+    document.getElementById("adminSection").classList.remove("hidden");
+    loadAdmin();
+  }else{
+    document.getElementById("customerSection").classList.remove("hidden");
+    document.getElementById("shopkeeperSection").classList.remove("hidden");
+    loadShops();
+    loadMyOrders();
+    loadOwnerShop();
+  }
+});
+
+async function loadShops(){
+  const area = document.getElementById("areaFilter").value;
+  const list = document.getElementById("shopList");
+
+  list.innerHTML = "Loading shops...";
+
+  try{
+    const snap = await db.collection("shops")
+      .where("approved","==",true).get();
+
+    list.innerHTML = "";
+
+    snap.forEach(doc=>{
+      const s = doc.data();
+
+      if(s.active === false)return;
+      if(area && s.area !== area)return;
+
+      const div = document.createElement("div");
+      div.className = "food";
+
+      const title = document.createElement("h3");
+      title.innerText = s.name;
+
+      const details = document.createElement("p");
+      details.innerText = (s.area || "") + " • " + (s.address || "");
+
+      const button = document.createElement("button");
+      button.innerText = "View Menu";
+      button.onclick = ()=>showMenu(doc.id,s);
+
+      div.append(title,details,button);
+      list.appendChild(div);
+    });
+
+    if(!list.innerHTML){
+      list.innerText = "No approved shops found.";
+    }
+
+  }catch(error){
+    list.innerText = error.message;
+  }
+}
+
+function showMenu(shopId,shop){
+  const list = document.getElementById("shopList");
+  list.innerHTML = "";
+
+  const title = document.createElement("h3");
+  title.innerText = shop.name;
+  list.appendChild(title);
+
+  (shop.menu || []).forEach(food=>{
+    if(food.available === false)return;
+
+    const div = document.createElement("div");
+    div.className = "food";
+
+    const name = document.createElement("b");
+    name.innerText = food.name + " - ₹" + food.price;
+
+    if(food.image){
+      const img = document.createElement("img");
+      img.src = food.image;
+      img.alt = food.name;
+      img.onerror = ()=>img.remove();
+      div.appendChild(img);
+    }
+
+    const button = document.createElement("button");
+    button.innerText = "Add";
+    button.onclick = ()=>addToCart(shopId,shop.name,food);
+
+    div.append(name,button);
+    list.appendChild(div);
+  });
+
+  const back = document.createElement("button");
+  back.className = "secondary";
+  back.innerText = "Back to Shops";
+  back.onclick = loadShops;
+
+  list.appendChild(back);
+}
+
+function addToCart(shopId,shopName,food){
+  if(cart.length && cart[0].shopId !== shopId){
+    alert("Please complete your current shop cart first.");
+    return;
+  }
+
+  const foodId = food.id || food.name;
+  const existing = cart.find(x=>x.foodId === foodId);
+
+  if(existing){
+    existing.quantity++;
+  }else{
+    cart.push({
+      foodId:foodId,
+      shopId:shopId,
+      shopName:shopName,
+      name:food.name,
+      price:Number(food.price),
+      quantity:1
+    });
+  }
+
+  renderCart();
+}
+
+function renderCart(){
+  const list = document.getElementById("cartList");
+  list.innerHTML = "";
+
+  let subtotal = 0;
+
+  cart.forEach((item,index)=>{
+    subtotal += item.price * item.quantity;
+
+    const div = document.createElement("div");
+    div.innerText = item.name + " × " + item.quantity +
+      " = ₹" + (item.price * item.quantity);
+
+    const remove = document.createElement("button");
+    remove.className = "red";
+    remove.innerText = "Remove";
+
+    remove.onclick = ()=>{
+      cart.splice(index,1);
+      renderCart();
+    };
+
+    div.appendChild(remove);
+    list.appendChild(div);
+  });
+
+  if(!cart.length){
+    list.innerText = "Your cart is empty.";
+  }
+
+  document.getElementById("cartTotal").innerText =
+    "Subtotal: ₹" + subtotal;
+}
+
+async function placeOrder(){
+  if(!cart.length){
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const address = document.getElementById("deliveryAddress").value.trim();
+
+  if(!address){
+    alert("Enter delivery address.");
+    return;
+  }
+
+  try{
+    const shopDoc = await db.collection("shops").doc(cart[0].shopId).get();
+
+    if(!shopDoc.exists ||
+       shopDoc.data().approved !== true ||
+       shopDoc.data().active === false){
+      alert("This shop is not available.");
+      return;
+    }
+
+    const shop = shopDoc.data();
+
+    const subtotal = cart.reduce(
+      (sum,item)=>sum + item.price * item.quantity,0
+    );
+
+    const charge = Number(shop.deliveryCharge || 0);
+    const method = document.getElementById("paymentMethod").value;
+
+    await db.collection("orders").add({
+      customerId:currentUser.uid,
+      shopId:cart[0].shopId,
+      shopName:cart[0].shopName,
+      items:cart.map(item=>({...item})),
+      subtotal:subtotal,
+      deliveryCharge:charge,
+      total:subtotal + charge,
+      address:address,
+      paymentMethod:method,
+      paymentStatus:method === "COD" ?
+        "Pending" : "Awaiting manual confirmation",
+      status:"New",
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Order placed successfully!");
+
+    cart = [];
+    renderCart();
+    loadMyOrders();
+
+  }catch(error){
+    alert("Order failed: " + error.message);
+  }
+}
+
+async function loadMyOrders(){
+  const box = document.getElementById("myOrders");
+
+  try{
+    const snap = await db.collection("orders")
+      .where("customerId","==",currentUser.uid).get();
+
+    box.innerHTML = "";
+
+    snap.forEach(doc=>{
+      const o = doc.data();
+
+      const div = document.createElement("div");
+      div.className = "food";
+      div.innerText = o.shopName + " | ₹" +
+        o.total + " | " + o.status;
+
+      box.appendChild(div);
+    });
+
+    if(!box.innerHTML){
+      box.innerText = "No orders yet.";
+    }
+
+  }catch(error){
+    box.innerText = error.message;
+  }
+}
+
+async function registerShop(){
+  const name = document.getElementById("shopName").value.trim();
+  const phone = document.getElementById("shopPhone").value.trim();
+  const address = document.getElementById("shopAddress").value.trim();
+  const area = document.getElementById("shopArea").value;
+
+  if(!name || !phone || !address){
+    message("shopMessage","Please fill all shop details.");
+    return;
+  }
+
+  try{
+    await db.collection("shops").add({
+      name:name,
+      phone:phone,
+      address:address,
+      area:area,
+      ownerId:currentUser.uid,
+      ownerEmail:currentUser.email,
+      approved:false,
+      active:false,
+      menu:[],
+      deliveryCharge:Number(
+        document.getElementById("deliveryCharge").value || 0
+      ),
+      upiId:document.getElementById("upiId").value.trim(),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    message("shopMessage","Registration submitted. Waiting for admin approval.");
+    loadOwnerShop();
+
+  }catch(error){
+    message("shopMessage",error.message);
+  }
+}
+
+async function loadOwnerShop(){
+  const box = document.getElementById("ownerShop");
+
+  try{
+    const snap = await db.collection("shops")
+      .where("ownerId","==",currentUser.uid).get();
+
+    box.innerHTML = "";
+
+    snap.forEach(doc=>{
+      const s = doc.data();
+
+      const div = document.createElement("p");
+      div.innerText = s.name + " — " +
+        (s.approved ? "Approved" : "Waiting for approval");
+
+      box.appendChild(div);
+    });
+
+    if(!box.innerHTML){
+      box.innerText = "You have not registered a shop yet.";
+    }
+
+  }catch(error){
+    box.innerText = error.message;
+  }
+}
+
+async function loadAdmin(){
+  await loadAdminShops();
+  loadAdminOrders();
+}
+
+async function loadAdminShops(){
+  const box = document.getElementById("adminShops");
+
+  box.innerHTML = "Loading...";
+
+  try{
+    const snap = await db.collection("shops").get();
+
+    adminShopsCache = [];
+
+    box.innerHTML = "";
+
+    snap.forEach(doc=>{
+      const s = doc.data();
+
+      adminShopsCache.push({
+        id:doc.id,
+        ...s
+      });
+
+      const div = document.createElement("div");
+      div.className = "food";
+
+      const title = document.createElement("b");
+      title.innerText = s.name + " (" + s.area + ")";
+
+      const status = document.createElement("p");
+      status.innerText =
+        "Approval: " + (s.approved ? "Approved" : "Pending") +
+        " | Active: " + (s.active ? "Yes" : "No");
+
+      const approve = document.createElement("button");
+      approve.innerText = s.approved ? "Approved" : "Approve";
+      approve.onclick = ()=>updateShop(doc.id,{
+        approved:true,
+        active:true
+      });
+
+      const toggle = document.createElement("button");
+      toggle.className = "secondary";
+      toggle.innerText = s.active ? "Deactivate" : "Activate";
+      toggle.onclick = ()=>updateShop(doc.id,{
+        active:!s.active
+      });
+
+      const remove = document.createElement("button");
+      remove.className = "red";
+      remove.innerText = "Delete";
+      remove.onclick = ()=>deleteShop(doc.id);
+
+      div.append(title,status,approve,toggle,remove);
+      box.appendChild(div);
+    });
+
+    if(!box.innerHTML){
+      box.innerText = "No shops registered.";
+    }
+
+    refreshMenuShopSelect();
+
+  }catch(error){
+    box.innerText = error.message;
+  }
+}
+
+/* NEW MENU MANAGEMENT FUNCTIONS */
+
+function refreshMenuShopSelect(){
+  const select = document.getElementById("menuShopSelect");
+  const previous = select.value;
+
+  select.innerHTML = '<option value="">Select Shop</option>';
+
+  adminShopsCache.forEach(shop=>{
+    const option = document.createElement("option");
+    option.value = shop.id;
+    option.textContent = shop.name + " - " + shop.area;
+    select.appendChild(option);
+  });
+
+  if(adminShopsCache.some(s=>s.id === previous)){
+    select.value = previous;
+    loadMenuForAdmin();
+  }else{
+    document.getElementById("menuEditor").classList.add("hidden");
+  }
+}
+
+async function loadMenuForAdmin(){
+  const shopId = document.getElementById("menuShopSelect").value;
+  const editor = document.getElementById("menuEditor");
+
+  if(!shopId){
+    editor.classList.add("hidden");
+    return;
+  }
+
+  try{
+    const doc = await db.collection("shops").doc(shopId).get();
+
+    if(!doc.exists){
+      alert("Shop not found.");
+      return;
+    }
+
+    editor.classList.remove("hidden");
+    document.getElementById("selectedShopName").innerText =
+      "Shop: " + (doc.data().name || "");
+
+    renderAdminFoodList(doc.data().menu || []);
+
+  }catch(error){
+    alert("Could not load menu: " + error.message);
+  }
+}
+
+function renderAdminFoodList(menu){
+  const box = document.getElementById("adminFoodList");
+  box.innerHTML = "";
+
+  if(!menu.length){
+    box.innerText = "No food items added yet.";
+    return;
+  }
+
+  menu.forEach(food=>{
+    const div = document.createElement("div");
+    div.className = "food";
+
+    const name = document.createElement("b");
+    name.innerText = food.name + " — ₹" + food.price;
+
+    const status = document.createElement("p");
+    status.innerText =
+      food.available === false ? "Unavailable" : "Available";
+
+    div.append(name,status);
+
+    if(food.image){
+      const img = document.createElement("img");
+      img.src = food.image;
+      img.alt = food.name;
+      img.onerror = ()=>img.remove();
+      div.appendChild(img);
+    }
+
+    const edit = document.createElement("button");
+    edit.innerText = "Edit";
+    edit.onclick = ()=>editFood(food.id);
+
+    const toggle = document.createElement("button");
+    toggle.className = "secondary";
+    toggle.innerText =
+      food.available === false ? "Make Available" : "Make Unavailable";
+    toggle.onclick = ()=>toggleFood(food.id);
+
+    const remove = document.createElement("button");
+    remove.className = "red";
+    remove.innerText = "Delete";
+    remove.onclick = ()=>deleteFood(food.id);
+
+    div.append(edit,toggle,remove);
+    box.appendChild(div);
+  });
+}
+
+async function saveFood(){
+  const shopId = document.getElementById("menuShopSelect").value;
+  const name = document.getElementById("foodName").value.trim();
+  const price = Number(document.getElementById("foodPrice").value);
+  const image = document.getElementById("foodImage").value.trim();
+  const editingId = document.getElementById("editingFoodId").value;
+
+  if(!shopId){
+    alert("Please select a shop.");
+    return;
+  }
+
+  if(!name || document.getElementById("foodPrice").value === "" ||
+     !Number.isFinite(price) || price < 0){
+    alert("Enter a food name and a valid price.");
+    return;
+  }
+
+  try{
+    const ref = db.collection("shops").doc(shopId);
+    const doc = await ref.get();
+
+    if(!doc.exists){
+      alert("Shop not found.");
+      return;
+    }
+
+    let menu = doc.data().menu || [];
+
+    if(editingId){
+      menu = menu.map(food=>{
+        if(food.id === editingId){
+          return {
+            ...food,
+            name:name,
+            price:price,
+            image:image
+          };
+        }
+        return food;
+      });
+    }else{
+      menu.push({
+        id:Date.now().toString() + Math.random().toString(36).slice(2,7),
+        name:name,
+        price:price,
+        image:image,
+        available:true
+      });
+    }
+
+    await ref.update({menu:menu});
+
+    alert(editingId ? "Food item updated!" : "Food item added!");
+
+    clearFoodForm();
+    await loadMenuForAdmin();
+    await loadAdminShops();
+
+  }catch(error){
+    alert("Unable to save food item: " + error.message);
+  }
+}
+
+async function editFood(foodId){
+  const shopId = document.getElementById("menuShopSelect").value;
+
+  try{
+    const doc = await db.collection("shops").doc(shopId).get();
+    const menu = doc.data().menu || [];
+    const food = menu.find(f=>f.id === foodId);
+
+    if(!food)return;
+
+    document.getElementById("foodName").value = food.name;
+    document.getElementById("foodPrice").value = food.price;
+    document.getElementById("foodImage").value = food.image || "";
+    document.getElementById("editingFoodId").value = food.id;
+
+    document.getElementById("foodName").scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+async function toggleFood(foodId){
+  const shopId = document.getElementById("menuShopSelect").value;
+
+  try{
+    const ref = db.collection("shops").doc(shopId);
+    const doc = await ref.get();
+
+    let menu = doc.data().menu || [];
+
+    menu = menu.map(food=>{
+      if(food.id === foodId){
+        return {
+          ...food,
+          available:food.available === false
+        };
+      }
+      return food;
+    });
+
+    await ref.update({menu:menu});
+    await loadMenuForAdmin();
+
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+async function deleteFood(foodId){
+  if(!confirm("Delete this food item?"))return;
+
+  const shopId = document.getElementById("menuShopSelect").value;
+
+  try{
+    const ref = db.collection("shops").doc(shopId);
+    const doc = await ref.get();
+
+    let menu = doc.data().menu || [];
+    menu = menu.filter(food=>food.id !== foodId);
+
+    await ref.update({menu:menu});
+
+    clearFoodForm();
+    await loadMenuForAdmin();
+
+    alert("Food item deleted.");
+
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+function clearFoodForm(){
+  document.getElementById("foodName").value = "";
+  document.getElementById("foodPrice").value = "";
+  document.getElementById("foodImage").value = "";
+  document.getElementById("editingFoodId").value = "";
+}
+
+async function updateShop(id,changes){
+  try{
+    await db.collection("shops").doc(id).update(changes);
+    await loadAdminShops();
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+async function deleteShop(id){
+  if(!confirm("Delete this shop?"))return;
+
+  try{
+    await db.collection("shops").doc(id).delete();
+    await loadAdminShops();
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+async function adminAddShop(){
+  const name = document.getElementById("newShopName").value.trim();
+  const phone = document.getElementById("newShopPhone").value.trim();
+  const address = document.getElementById("newShopAddress").value.trim();
+
+  if(!name || !phone || !address){
+    alert("Fill all shop details.");
+    return;
+  }
+
+  try{
+    await db.collection("shops").add({
+      name:name,
+      phone:phone,
+      address:address,
+      area:document.getElementById("newShopArea").value,
+      ownerId:ADMIN_UID,
+      ownerEmail:currentUser.email,
+      approved:true,
+      active:true,
+      menu:[],
+      deliveryCharge:0,
+      upiId:"",
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById("newShopName").value = "";
+    document.getElementById("newShopPhone").value = "";
+    document.getElementById("newShopAddress").value = "";
+
+    alert("Shop added successfully.");
+    await loadAdminShops();
+
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+async function loadAdminOrders(){
+  const box = document.getElementById("adminOrders");
+  box.innerHTML = "Loading...";
+
+  try{
+    const snap = await db.collection("orders").get();
+    box.innerHTML = "";
+
+    snap.forEach(doc=>{
+      const o = doc.data();
+
+      const div = document.createElement("div");
+      div.className = "food";
+
+      const details = document.createElement("p");
+      details.innerText = o.shopName + " | ₹" +
+        o.total + " | " + o.status;
+
+      const address = document.createElement("p");
+      address.innerText = o.address;
+
+      const select = document.createElement("select");
+
+      ["New","Accepted","Preparing","Ready","Delivered","Cancelled"]
+      .forEach(status=>{
+        const option = document.createElement("option");
+        option.value = status;
+        option.innerText = status;
+
+        if(o.status === status){
+          option.selected = true;
+        }
+
+        select.appendChild(option);
+      });
+
+      const update = document.createElement("button");
+      update.innerText = "Update Status";
+
+      update.onclick = async()=>{
+        try{
+          await db.collection("orders").doc(doc.id).update({
+            status:select.value
+          });
+
+          alert("Order status updated.");
+
+        }catch(error){
+          alert(error.message);
+        }
+      };
+
+      div.append(details,address,select,update);
+      box.appendChild(div);
+    });
+
+    if(!box.innerHTML){
+      box.innerText = "No orders yet.";
+    }
+
+  }catch(error){
+    box.innerText = error.message;
+  }
+}
+
+</script>
+</body>
+</html>
