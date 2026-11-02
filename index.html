@@ -10,52 +10,23 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #fff8ed;
-  margin: 0;
-  color: #333;
-}
-header {
-  background: #f47b20;
-  color: white;
-  text-align: center;
-  padding: 20px;
-}
-header h1 { margin: 0; }
-.container {
-  max-width: 650px;
-  margin: 15px auto;
-  padding: 15px;
-}
-.card {
-  background: white;
-  padding: 15px;
-  margin: 12px 0;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px #ddd;
-}
-input, select, button, textarea {
-  width: 100%;
-  padding: 12px;
-  margin: 7px 0;
-  box-sizing: border-box;
-  border-radius: 7px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
-button {
-  background: #f47b20;
-  color: white;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-}
-button.secondary { background: #555; }
-button.green { background: #168747; }
-.hidden { display: none; }
-.price { color: #168747; font-weight: bold; }
-h2 { color: #e66c16; }
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#fff8ed;color:#333}
+header{background:#f47b20;color:white;padding:20px;text-align:center}
+header h1{margin:0}
+header p{margin:7px 0 0}
+.container{max-width:650px;margin:auto;padding:15px}
+.card{background:white;padding:18px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,select,textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #ccc;border-radius:7px;font-size:16px}
+button{background:#f47b20;color:white;border:0;padding:12px 18px;border-radius:7px;font-size:16px;margin:5px;cursor:pointer}
+button.secondary{background:#555}
+button.green{background:#218838}
+button.red{background:#c62828}
+.hidden{display:none}
+.food{border-bottom:1px solid #ddd;padding:12px 0}
+.food button{float:right}
+.small{font-size:13px;color:#666}
+h2{color:#e66b13}
 </style>
 </head>
 
@@ -68,602 +39,492 @@ h2 { color: #e66c16; }
 
 <div class="container">
 
-<div id="loginBox" class="card">
+<div id="loginSection" class="card">
 <h2>Welcome</h2>
 <input id="email" type="email" placeholder="Email address">
 <input id="password" type="password" placeholder="Password">
-
 <button onclick="login()">Login</button>
-<button class="secondary" onclick="register()">Create Customer Account</button>
-
-<p id="message"></p>
+<button class="secondary" onclick="register()">Create Account</button>
+<p id="loginMessage"></p>
 </div>
 
-<div id="app" class="hidden">
+<div id="appSection" class="hidden">
 
 <div class="card">
-<p id="welcome"></p>
-<button class="secondary" onclick="logout()">Logout</button>
+Welcome, <b id="userEmail"></b>
+<button class="red" onclick="logout()">Logout</button>
 </div>
 
 <div id="customerSection" class="hidden">
-
-<h2>Available Breakfast Shops</h2>
-
-<select id="area" onchange="loadShops()">
+<div class="card">
+<h2>Find Breakfast Shops</h2>
+<select id="areaFilter" onchange="loadShops()">
 <option value="">All Areas</option>
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
+<div id="shopList">Loading shops...</div>
+</div>
 
-<div id="shopList"></div>
-
-<h2>Your Cart</h2>
-<div id="cart"></div>
-
-<input id="deliveryAddress" placeholder="Enter delivery address">
-
-<select id="payment">
+<div class="card">
+<h2>🛒 My Cart</h2>
+<div id="cartList">Your cart is empty.</div>
+<p id="cartTotal"></p>
+<textarea id="deliveryAddress" placeholder="Enter your full delivery address"></textarea>
+<select id="paymentMethod">
 <option value="COD">Cash on Delivery</option>
 <option value="UPI">UPI Payment</option>
 </select>
-
-<button onclick="placeOrder()">Place Order</button>
-
-<h2>My Orders</h2>
-<div id="myOrders"></div>
-
+<button class="green" onclick="placeOrder()">Place Order</button>
 </div>
 
-<div id="ownerSection" class="hidden">
-
-<h2>Shopkeeper Registration</h2>
-
 <div class="card">
-<input id="shopName" placeholder="Shop name">
-<input id="shopPhone" placeholder="Mobile number">
-<input id="shopAddress" placeholder="Shop address">
+<h2>My Orders</h2>
+<div id="myOrders"></div>
+</div>
+</div>
 
+<div id="shopkeeperSection" class="hidden">
+<div class="card">
+<h2>Shopkeeper Registration</h2>
+<input id="shopName" placeholder="Shop name">
+<input id="shopPhone" placeholder="Phone number">
+<input id="shopAddress" placeholder="Shop address">
 <select id="shopArea">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-
 <input id="deliveryCharge" type="number" placeholder="Delivery charge">
-<input id="upiId" placeholder="Your UPI ID">
-
+<input id="upiId" placeholder="Shop UPI ID (optional)">
 <button onclick="registerShop()">Submit Shop for Approval</button>
 <p id="shopMessage"></p>
 </div>
-
-<h2>My Shops</h2>
-<div id="ownerShops"></div>
+<div class="card">
+<h2>My Shop Status</h2>
+<div id="ownerShop"></div>
+</div>
 </div>
 
 <div id="adminSection" class="hidden">
-
+<div class="card">
 <h2>👑 Admin Dashboard</h2>
+<h3>Shop Management</h3>
+<div id="adminShops"></div>
+</div>
 
 <div class="card">
-<h3>Add Shop Manually</h3>
-<input id="adminShopName" placeholder="Shop name">
-<input id="adminShopPhone" placeholder="Phone">
-<input id="adminShopAddress" placeholder="Address">
-
-<select id="adminShopArea">
+<h3>Add New Shop</h3>
+<input id="newShopName" placeholder="Shop name">
+<input id="newShopPhone" placeholder="Phone">
+<input id="newShopAddress" placeholder="Address">
+<select id="newShopArea">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-
-<button onclick="adminAddShop()">Add Approved Shop</button>
+<button onclick="adminAddShop()">Add Shop</button>
 </div>
 
-<h2>Shop Approval & Management</h2>
-<div id="adminShops"></div>
-
-<h2>All Orders</h2>
+<div class="card">
+<h3>Manage Orders</h3>
 <div id="adminOrders"></div>
-
 </div>
+</div>
+
 </div>
 </div>
 
 <script>
 const firebaseConfig = {
-  apiKey: apiKey: "AIzaSyBmLCgp-lhyVBZ18uIaGs785H55o6LcFi8", "project-2153778259975197488.firebaseapp.com",
+  apiKey: "PASTE_YOUR_EXACT_FIREBASE_API_KEY_HERE",
+  authDomain: "project-2153778259975197488.firebaseapp.com",
   projectId: "project-2153778259975197488",
   storageBucket: "project-2153778259975197488.firebasestorage.app",
   messagingSenderId: "854726959400",
   appId: "1:854726959400:web:fc87228ca991e1a8b4b01d"
 };
 
-firebase.initializeApp(firebaseConfig);
+const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
 
+firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
-
 let currentUser = null;
+let cart = [];
 let selectedShop = null;
-let cartItems = [];
 
-function showMessage(id, text) {
-  document.getElementById(id).innerText = text;
+function message(id,text){
+  document.getElementById(id).innerText=text;
 }
 
-function login() {
-  const e = document.getElementById("email").value.trim();
-  const p = document.getElementById("password").value;
-
-  auth.signInWithEmailAndPassword(e,p)
-  .catch(err => showMessage("message",err.message));
+function login(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!email||!password){message("loginMessage","Enter email and password.");return;}
+  auth.signInWithEmailAndPassword(email,password)
+  .catch(e=>message("loginMessage",e.message));
 }
 
-function register() {
-  const e = document.getElementById("email").value.trim();
-  const p = document.getElementById("password").value;
-
-  auth.createUserWithEmailAndPassword(e,p)
-  .catch(err => showMessage("message",err.message));
+function register(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!email||password.length<6){
+    message("loginMessage","Enter email and password (minimum 6 characters).");
+    return;
+  }
+  auth.createUserWithEmailAndPassword(email,password)
+  .catch(e=>message("loginMessage",e.message));
 }
 
-function logout() {
+function logout(){
   auth.signOut();
 }
 
-auth.onAuthStateChanged(async user => {
-  currentUser = user;
+auth.onAuthStateChanged(async user=>{
+  currentUser=user;
+  document.getElementById("loginSection").classList.toggle("hidden",!!user);
+  document.getElementById("appSection").classList.toggle("hidden",!user);
 
-  document.getElementById("loginBox").classList.toggle("hidden",!!user);
-  document.getElementById("app").classList.toggle("hidden",!user);
+  if(!user)return;
 
-  if(!user) return;
+  document.getElementById("userEmail").innerText=user.email;
 
-  document.getElementById("welcome").innerText =
-    "Welcome " + user.email;
+  ["customerSection","shopkeeperSection","adminSection"].forEach(id=>{
+    document.getElementById(id).classList.add("hidden");
+  });
 
-  ["customerSection","ownerSection","adminSection"]
-    .forEach(id => document.getElementById(id).classList.add("hidden"));
-
-  if(user.uid === ADMIN_UID) {
+  if(user.uid===ADMIN_UID){
     document.getElementById("adminSection").classList.remove("hidden");
     loadAdmin();
-  } else {
+  }else{
     document.getElementById("customerSection").classList.remove("hidden");
-    document.getElementById("ownerSection").classList.remove("hidden");
+    document.getElementById("shopkeeperSection").classList.remove("hidden");
     loadShops();
     loadMyOrders();
-    loadOwnerShops();
+    loadOwnerShop();
   }
 });
 
-async function loadShops() {
-  const list = document.getElementById("shopList");
-  list.innerHTML = "Loading shops...";
+async function loadShops(){
+  const area=document.getElementById("areaFilter").value;
+  const list=document.getElementById("shopList");
+  list.innerHTML="Loading...";
 
-  try {
-    const snap = await db.collection("shops").get();
-    const area = document.getElementById("area").value;
+  try{
+    const snap=await db.collection("shops").where("approved","==",true).get();
+    list.innerHTML="";
+    snap.forEach(doc=>{
+      const s=doc.data();
+      if(s.active===false)return;
+      if(area&&s.area!==area)return;
 
-    list.innerHTML = "";
-
-    snap.forEach(doc => {
-      const s = doc.data();
-
-      if(s.approved !== true || s.active === false) return;
-      if(area && s.area !== area) return;
-
-      const div = document.createElement("div");
-      div.className = "card";
-
-      const title = document.createElement("h3");
-      title.innerText = s.name || "Shop";
-      div.appendChild(title);
-
-      const address = document.createElement("p");
-      address.innerText = s.area || "";
-      div.appendChild(address);
-
-      const button = document.createElement("button");
-      button.innerText = "View Menu";
-      button.onclick = () => showMenu(doc.id,s);
-      div.appendChild(button);
-
+      const div=document.createElement("div");
+      div.className="food";
+      const title=document.createElement("h3");
+      title.innerText=s.name;
+      const details=document.createElement("p");
+      details.innerText=(s.area||"")+" • "+(s.address||"");
+      const button=document.createElement("button");
+      button.innerText="View Menu";
+      button.onclick=()=>showMenu(doc.id,s);
+      div.append(title,details,button);
       list.appendChild(div);
     });
-
-    if(!list.innerHTML) list.innerText = "No approved shops found yet.";
-
-  } catch(e) {
-    list.innerText = e.message;
-  }
+    if(!list.innerHTML)list.innerText="No approved shops found.";
+  }catch(e){list.innerText=e.message;}
 }
 
-function showMenu(id,shop) {
-  selectedShop = {id,...shop};
+function showMenu(shopId,shop){
+  selectedShop={id:shopId,...shop};
+  const list=document.getElementById("shopList");
+  list.innerHTML="<h3>"+shop.name+"</h3>";
 
-  const list = document.getElementById("shopList");
-  list.innerHTML = "<h3>"+escapeHTML(shop.name)+" Menu</h3>";
-
-  (shop.menu || []).forEach(food => {
-    if(food.available === false) return;
-
-    const div = document.createElement("div");
-    div.className = "card";
-
-    const title = document.createElement("h3");
-    title.innerText = food.name;
-    div.appendChild(title);
-
-    const price = document.createElement("p");
-    price.className = "price";
-    price.innerText = "₹" + food.price;
-    div.appendChild(price);
-
-    const button = document.createElement("button");
-    button.innerText = "Add to Cart";
-    button.onclick = () => addToCart(food);
-    div.appendChild(button);
-
+  (shop.menu||[]).forEach((food,index)=>{
+    if(food.available===false)return;
+    const div=document.createElement("div");
+    div.className="food";
+    const name=document.createElement("b");
+    name.innerText=food.name+" - ₹"+food.price;
+    const button=document.createElement("button");
+    button.innerText="Add";
+    button.onclick=()=>addToCart(shopId,shop.name,food);
+    div.append(name,button);
     list.appendChild(div);
   });
 
-  const back = document.createElement("button");
-  back.className = "secondary";
-  back.innerText = "Back to Shops";
-  back.onclick = loadShops;
+  const back=document.createElement("button");
+  back.className="secondary";
+  back.innerText="Back to Shops";
+  back.onclick=loadShops;
   list.appendChild(back);
 }
 
-function addToCart(food) {
-  if(!selectedShop) return alert("Select a shop first.");
-
-  const existing = cartItems.find(x => x.id === food.id);
-
-  if(existing) existing.quantity++;
-  else cartItems.push({...food,quantity:1});
-
-  displayCart();
+function addToCart(shopId,shopName,food){
+  if(cart.length&&cart[0].shopId!==shopId){
+    alert("Please complete or clear your current shop cart first.");
+    return;
+  }
+  const existing=cart.find(x=>x.foodId===food.id);
+  if(existing)existing.quantity++;
+  else cart.push({
+    foodId:food.id||food.name,
+    shopId,shopName,
+    name:food.name,
+    price:Number(food.price),
+    quantity:1
+  });
+  renderCart();
 }
 
-function displayCart() {
-  const div = document.getElementById("cart");
-  div.innerHTML = "";
+function renderCart(){
+  const list=document.getElementById("cartList");
+  list.innerHTML="";
+  let subtotal=0;
 
-  let subtotal = 0;
-
-  cartItems.forEach(item => {
-    subtotal += Number(item.price) * item.quantity;
-
-    const row = document.createElement("p");
-    row.innerText =
-      item.name + " x " + item.quantity + " = ₹" +
-      (item.price * item.quantity);
-
-    div.appendChild(row);
+  cart.forEach((item,index)=>{
+    subtotal+=item.price*item.quantity;
+    const div=document.createElement("div");
+    div.innerText=item.name+" × "+item.quantity+" = ₹"+(item.price*item.quantity);
+    const remove=document.createElement("button");
+    remove.className="red";
+    remove.innerText="Remove";
+    remove.onclick=()=>{cart.splice(index,1);renderCart();};
+    div.appendChild(remove);
+    list.appendChild(div);
   });
 
-  const total = document.createElement("h3");
-  total.innerText = "Food total: ₹" + subtotal;
-  div.appendChild(total);
+  if(!cart.length)list.innerText="Your cart is empty.";
+  document.getElementById("cartTotal").innerText="Subtotal: ₹"+subtotal;
 }
 
-async function placeOrder() {
-  if(!selectedShop || cartItems.length === 0)
-    return alert("Please select food and add it to cart.");
+async function placeOrder(){
+  if(!cart.length){alert("Your cart is empty.");return;}
+  const address=document.getElementById("deliveryAddress").value.trim();
+  if(!address){alert("Enter delivery address.");return;}
 
-  const address = document.getElementById("deliveryAddress").value.trim();
-
-  if(!address) return alert("Please enter delivery address.");
-
-  const subtotal = cartItems.reduce(
-    (sum,item) => sum + Number(item.price)*item.quantity,0
-  );
-
-  const charge = Number(selectedShop.deliveryCharge || 0);
-  const payment = document.getElementById("payment").value;
-
-  const order = {
-    customerId: currentUser.uid,
-    shopId: selectedShop.id,
-    shopName: selectedShop.name,
-    items: cartItems.map(item => ({
-      foodId: item.id,
-      name: item.name,
-      price: Number(item.price),
-      quantity: item.quantity
-    })),
-    subtotal: subtotal,
-    deliveryCharge: charge,
-    total: subtotal + charge,
-    address: address,
-    paymentMethod: payment,
-    paymentStatus: payment === "COD" ? "Pending" : "Pending Verification",
-    status: "New",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  try {
-    const ref = await db.collection("orders").add(order);
-
-    alert("Order placed successfully! Order ID: " + ref.id);
-
-    cartItems = [];
-    selectedShop = null;
-    displayCart();
-    loadShops();
-    loadMyOrders();
-
-    if(payment === "UPI") {
-      if(!selectedShop?.upiId) {
-        alert("Contact the shopkeeper for UPI payment details. Payment is not verified automatically.");
-      } else {
-        alert("Order saved. Please contact the shopkeeper for UPI payment instructions. Payment is not verified automatically.");
-      }
+  try{
+    const shopDoc=await db.collection("shops").doc(cart[0].shopId).get();
+    if(!shopDoc.exists||shopDoc.data().approved!==true||shopDoc.data().active===false){
+      alert("This shop is not available.");
+      return;
     }
 
-  } catch(e) {
-    alert("Order error: " + e.message);
-  }
-}
+    const shop=shopDoc.data();
+    const subtotal=cart.reduce((sum,x)=>sum+x.price*x.quantity,0);
+    const charge=Number(shop.deliveryCharge||0);
+    const method=document.getElementById("paymentMethod").value;
 
-async function loadMyOrders() {
-  const div = document.getElementById("myOrders");
-  div.innerHTML = "Loading...";
-
-  try {
-    const snap = await db.collection("orders")
-      .where("customerId","==",currentUser.uid).get();
-
-    div.innerHTML = "";
-
-    snap.forEach(doc => {
-      const o = doc.data();
-      const card = document.createElement("div");
-      card.className = "card";
-
-      const title = document.createElement("h3");
-      title.innerText = o.shopName;
-      card.appendChild(title);
-
-      const details = document.createElement("p");
-      details.innerText =
-        "Total: ₹" + o.total + " | Status: " + o.status +
-        " | Payment: " + o.paymentMethod;
-      card.appendChild(details);
-
-      div.appendChild(card);
-    });
-
-    if(snap.empty) div.innerText = "No orders yet.";
-
-  } catch(e) {
-    div.innerText = e.message;
-  }
-}
-
-async function registerShop() {
-  const name = document.getElementById("shopName").value.trim();
-  const phone = document.getElementById("shopPhone").value.trim();
-  const address = document.getElementById("shopAddress").value.trim();
-  const area = document.getElementById("shopArea").value;
-
-  if(!name || !phone || !address)
-    return alert("Please enter shop name, phone and address.");
-
-  try {
-    await db.collection("shops").add({
-      name,
-      phone,
+    await db.collection("orders").add({
+      customerId:currentUser.uid,
+      shopId:cart[0].shopId,
+      shopName:cart[0].shopName,
+      items:cart.map(x=>({...x})),
+      subtotal,
+      deliveryCharge:charge,
+      total:subtotal+charge,
       address,
-      area,
-      ownerId: currentUser.uid,
-      ownerEmail: currentUser.email,
-      approved: false,
-      active: false,
-      menu: [],
-      deliveryCharge: Number(document.getElementById("deliveryCharge").value || 0),
-      upiId: document.getElementById("upiId").value.trim(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      paymentMethod:method,
+      paymentStatus:method==="COD"?"Pending":"Awaiting manual confirmation",
+      status:"New",
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    showMessage("shopMessage","Registration submitted. Waiting for admin approval.");
-    loadOwnerShops();
-
-  } catch(e) {
-    showMessage("shopMessage","Error: " + e.message);
-  }
+    alert("Order placed successfully!");
+    cart=[];
+    renderCart();
+    loadMyOrders();
+  }catch(e){alert("Order failed: "+e.message);}
 }
 
-async function loadOwnerShops() {
-  const div = document.getElementById("ownerShops");
-  div.innerHTML = "";
+async function loadMyOrders(){
+  const box=document.getElementById("myOrders");
+  try{
+    const snap=await db.collection("orders")
+      .where("customerId","==",currentUser.uid).get();
+    box.innerHTML="";
+    snap.forEach(doc=>{
+      const o=doc.data();
+      const div=document.createElement("div");
+      div.className="food";
+      div.innerText=o.shopName+" | ₹"+o.total+" | "+o.status;
+      box.appendChild(div);
+    });
+    if(!box.innerHTML)box.innerText="No orders yet.";
+  }catch(e){box.innerText=e.message;}
+}
 
-  try {
-    const snap = await db.collection("shops")
+async function registerShop(){
+  const name=document.getElementById("shopName").value.trim();
+  const phone=document.getElementById("shopPhone").value.trim();
+  const address=document.getElementById("shopAddress").value.trim();
+  const area=document.getElementById("shopArea").value;
+
+  if(!name||!phone||!address){
+    message("shopMessage","Please fill all shop details.");
+    return;
+  }
+
+  try{
+    await db.collection("shops").add({
+      name,phone,address,area,
+      ownerId:currentUser.uid,
+      ownerEmail:currentUser.email,
+      approved:false,
+      active:false,
+      menu:[],
+      deliveryCharge:Number(document.getElementById("deliveryCharge").value||0),
+      upiId:document.getElementById("upiId").value.trim(),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    message("shopMessage","Registration submitted. Waiting for admin approval.");
+    loadOwnerShop();
+  }catch(e){message("shopMessage",e.message);}
+}
+
+async function loadOwnerShop(){
+  const box=document.getElementById("ownerShop");
+  try{
+    const snap=await db.collection("shops")
       .where("ownerId","==",currentUser.uid).get();
-
-    snap.forEach(doc => {
-      const s = doc.data();
-      const card = document.createElement("div");
-      card.className = "card";
-
-      const title = document.createElement("h3");
-      title.innerText = s.name;
-      card.appendChild(title);
-
-      const status = document.createElement("p");
-      status.innerText = s.approved ? "Approved" : "Waiting for approval";
-      card.appendChild(status);
-
-      div.appendChild(card);
+    box.innerHTML="";
+    snap.forEach(doc=>{
+      const s=doc.data();
+      const div=document.createElement("p");
+      div.innerText=s.name+" — "+(s.approved?"Approved":"Waiting for approval");
+      box.appendChild(div);
     });
-
-  } catch(e) {
-    div.innerText = e.message;
-  }
+    if(!box.innerHTML)box.innerText="You have not registered a shop yet.";
+  }catch(e){box.innerText=e.message;}
 }
 
-async function loadAdmin() {
+async function loadAdmin(){
   loadAdminShops();
   loadAdminOrders();
 }
 
-async function loadAdminShops() {
-  const div = document.getElementById("adminShops");
-  div.innerHTML = "Loading...";
+async function loadAdminShops(){
+  const box=document.getElementById("adminShops");
+  box.innerHTML="Loading...";
+  try{
+    const snap=await db.collection("shops").get();
+    box.innerHTML="";
+    snap.forEach(doc=>{
+      const s=doc.data();
+      const div=document.createElement("div");
+      div.className="food";
 
-  try {
-    const snap = await db.collection("shops").get();
-    div.innerHTML = "";
+      const title=document.createElement("b");
+      title.innerText=s.name+" ("+s.area+")";
+      const status=document.createElement("p");
+      status.innerText="Approval: "+(s.approved?"Approved":"Pending")+" | Active: "+(s.active?"Yes":"No");
 
-    snap.forEach(doc => {
-      const s = doc.data();
-      const card = document.createElement("div");
-      card.className = "card";
+      const approve=document.createElement("button");
+      approve.innerText=s.approved?"Approved":"Approve";
+      approve.onclick=()=>updateShop(doc.id,{approved:true,active:true});
 
-      const title = document.createElement("h3");
-      title.innerText = s.name;
-      card.appendChild(title);
+      const toggle=document.createElement("button");
+      toggle.className="secondary";
+      toggle.innerText=s.active?"Deactivate":"Activate";
+      toggle.onclick=()=>updateShop(doc.id,{active:!s.active});
 
-      const info = document.createElement("p");
-      info.innerText = s.area + " | " + s.phone +
-        " | " + (s.approved ? "Approved" : "Pending");
-      card.appendChild(info);
+      const remove=document.createElement("button");
+      remove.className="red";
+      remove.innerText="Delete";
+      remove.onclick=()=>deleteShop(doc.id);
 
-      const approve = document.createElement("button");
-      approve.innerText = s.approved ? "Approved" : "Approve Shop";
-      approve.onclick = () => updateShop(doc.id,{approved:true,active:true});
-      card.appendChild(approve);
-
-      const deactivate = document.createElement("button");
-      deactivate.className = "secondary";
-      deactivate.innerText = s.active === false ? "Activate Shop" : "Deactivate Shop";
-      deactivate.onclick = () => updateShop(doc.id,{active:s.active === false});
-      card.appendChild(deactivate);
-
-      const remove = document.createElement("button");
-      remove.style.background = "#b00020";
-      remove.innerText = "Delete Shop";
-      remove.onclick = () => {
-        if(confirm("Delete this shop?"))
-          db.collection("shops").doc(doc.id).delete().then(loadAdminShops);
-      };
-      card.appendChild(remove);
-
-      div.appendChild(card);
+      div.append(title,status,approve,toggle,remove);
+      box.appendChild(div);
     });
-
-    if(snap.empty) div.innerText = "No shops registered yet.";
-
-  } catch(e) {
-    div.innerText = e.message;
-  }
+    if(!box.innerHTML)box.innerText="No shops registered.";
+  }catch(e){box.innerText=e.message;}
 }
 
-async function updateShop(id,changes) {
-  try {
+async function updateShop(id,changes){
+  try{
     await db.collection("shops").doc(id).update(changes);
     loadAdminShops();
-  } catch(e) {
-    alert(e.message);
-  }
+  }catch(e){alert(e.message);}
 }
 
-async function adminAddShop() {
-  const name = document.getElementById("adminShopName").value.trim();
-  const phone = document.getElementById("adminShopPhone").value.trim();
-  const address = document.getElementById("adminShopAddress").value.trim();
+async function deleteShop(id){
+  if(!confirm("Delete this shop?"))return;
+  try{
+    await db.collection("shops").doc(id).delete();
+    loadAdminShops();
+  }catch(e){alert(e.message);}
+}
 
-  if(!name || !phone || !address)
-    return alert("Enter shop details.");
+async function adminAddShop(){
+  const name=document.getElementById("newShopName").value.trim();
+  const phone=document.getElementById("newShopPhone").value.trim();
+  const address=document.getElementById("newShopAddress").value.trim();
 
-  try {
+  if(!name||!phone||!address){alert("Fill all shop details.");return;}
+
+  try{
     await db.collection("shops").add({
-      name,
-      phone,
-      address,
-      area: document.getElementById("adminShopArea").value,
-      ownerId: ADMIN_UID,
-      ownerEmail: currentUser.email,
-      approved: true,
-      active: true,
-      menu: [],
-      deliveryCharge: 0,
-      upiId: "",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      name,phone,address,
+      area:document.getElementById("newShopArea").value,
+      ownerId:ADMIN_UID,
+      ownerEmail:currentUser.email,
+      approved:true,
+      active:true,
+      menu:[],
+      deliveryCharge:0,
+      upiId:"",
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
-
     alert("Shop added successfully.");
     loadAdminShops();
-
-  } catch(e) {
-    alert("Error: " + e.message);
-  }
+  }catch(e){alert(e.message);}
 }
 
-async function loadAdminOrders() {
-  const div = document.getElementById("adminOrders");
-  div.innerHTML = "Loading...";
+async function loadAdminOrders(){
+  const box=document.getElementById("adminOrders");
+  box.innerHTML="Loading...";
+  try{
+    const snap=await db.collection("orders").get();
+    box.innerHTML="";
+    snap.forEach(doc=>{
+      const o=doc.data();
+      const div=document.createElement("div");
+      div.className="food";
 
-  try {
-    const snap = await db.collection("orders").get();
-    div.innerHTML = "";
+      const details=document.createElement("p");
+      details.innerText=o.shopName+" | ₹"+o.total+" | "+o.status;
 
-    snap.forEach(doc => {
-      const o = doc.data();
-      const card = document.createElement("div");
-      card.className = "card";
+      const address=document.createElement("p");
+      address.innerText=o.address;
 
-      const title = document.createElement("h3");
-      title.innerText = o.shopName;
-      card.appendChild(title);
-
-      const details = document.createElement("p");
-      details.innerText =
-        "Total ₹" + o.total + " | " + o.status +
-        " | " + o.paymentMethod;
-      card.appendChild(details);
-
-      const status = document.createElement("select");
-
-      ["New","Accepted","Preparing","Ready","Out for Delivery","Delivered","Cancelled"]
-      .forEach(value => {
-        const option = document.createElement("option");
-        option.value = value;
-        option.innerText = value;
-        option.selected = o.status === value;
-        status.appendChild(option);
+      const select=document.createElement("select");
+      ["New","Accepted","Preparing","Ready","Delivered","Cancelled"].forEach(status=>{
+        const option=document.createElement("option");
+        option.value=status;
+        option.innerText=status;
+        if(o.status===status)option.selected=true;
+        select.appendChild(option);
       });
 
-      status.onchange = () => {
-        db.collection("orders").doc(doc.id)
-          .update({status:status.value})
-          .catch(e => alert(e.message));
+      const update=document.createElement("button");
+      update.innerText="Update Status";
+      update.onclick=async()=>{
+        try{
+          await db.collection("orders").doc(doc.id).update({status:select.value});
+          alert("Order status updated.");
+        }catch(e){alert(e.message);}
       };
 
-      card.appendChild(status);
-      div.appendChild(card);
+      div.append(details,address,select,update);
+      box.appendChild(div);
     });
-
-    if(snap.empty) div.innerText = "No orders yet.";
-
-  } catch(e) {
-    div.innerText = e.message;
-  }
-}
-
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
+    if(!box.innerHTML)box.innerText="No orders yet.";
+  }catch(e){box.innerText=e.message;}
 }
 </script>
 
