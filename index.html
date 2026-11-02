@@ -25,7 +25,6 @@ button.red{background:#c62828}
 .hidden{display:none}
 .food{border-bottom:1px solid #ddd;padding:12px 0}
 .food button{float:right}
-.small{font-size:13px;color:#666}
 h2{color:#e66b13}
 </style>
 </head>
@@ -56,6 +55,7 @@ Welcome, <b id="userEmail"></b>
 </div>
 
 <div id="customerSection" class="hidden">
+
 <div class="card">
 <h2>Find Breakfast Shops</h2>
 <select id="areaFilter" onchange="loadShops()">
@@ -84,32 +84,40 @@ Welcome, <b id="userEmail"></b>
 <h2>My Orders</h2>
 <div id="myOrders"></div>
 </div>
+
 </div>
 
 <div id="shopkeeperSection" class="hidden">
+
 <div class="card">
 <h2>Shopkeeper Registration</h2>
 <input id="shopName" placeholder="Shop name">
 <input id="shopPhone" placeholder="Phone number">
 <input id="shopAddress" placeholder="Shop address">
+
 <select id="shopArea">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
+
 <input id="deliveryCharge" type="number" placeholder="Delivery charge">
 <input id="upiId" placeholder="Shop UPI ID (optional)">
+
 <button onclick="registerShop()">Submit Shop for Approval</button>
 <p id="shopMessage"></p>
 </div>
+
 <div class="card">
 <h2>My Shop Status</h2>
 <div id="ownerShop"></div>
 </div>
+
 </div>
 
 <div id="adminSection" class="hidden">
+
 <div class="card">
 <h2>👑 Admin Dashboard</h2>
 <h3>Shop Management</h3>
@@ -121,12 +129,14 @@ Welcome, <b id="userEmail"></b>
 <input id="newShopName" placeholder="Shop name">
 <input id="newShopPhone" placeholder="Phone">
 <input id="newShopAddress" placeholder="Address">
+
 <select id="newShopArea">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
+
 <button onclick="adminAddShop()">Add Shop</button>
 </div>
 
@@ -134,8 +144,8 @@ Welcome, <b id="userEmail"></b>
 <h3>Manage Orders</h3>
 <div id="adminOrders"></div>
 </div>
-</div>
 
+</div>
 </div>
 </div>
 
@@ -152,34 +162,55 @@ const firebaseConfig = {
 const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
 
 firebase.initializeApp(firebaseConfig);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
 let cart = [];
-let selectedShop = null;
 
 function message(id,text){
-  document.getElementById(id).innerText=text;
+  document.getElementById(id).innerText = text;
 }
 
 function login(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
-  if(!email||!password){message("loginMessage","Enter email and password.");return;}
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password){
+    message("loginMessage","Enter email and password.");
+    return;
+  }
+
+  message("loginMessage","Please wait...");
+
   auth.signInWithEmailAndPassword(email,password)
-  .catch(e=>message("loginMessage",e.message));
+  .then(()=>{
+    message("loginMessage","Login successful.");
+  })
+  .catch(error=>{
+    message("loginMessage",error.message);
+  });
 }
 
 function register(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
-  if(!email||password.length<6){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || password.length < 6){
     message("loginMessage","Enter email and password (minimum 6 characters).");
     return;
   }
+
+  message("loginMessage","Creating account...");
+
   auth.createUserWithEmailAndPassword(email,password)
-  .catch(e=>message("loginMessage",e.message));
+  .then(()=>{
+    message("loginMessage","Account created successfully.");
+  })
+  .catch(error=>{
+    message("loginMessage",error.message);
+  });
 }
 
 function logout(){
@@ -187,19 +218,20 @@ function logout(){
 }
 
 auth.onAuthStateChanged(async user=>{
-  currentUser=user;
+  currentUser = user;
+
   document.getElementById("loginSection").classList.toggle("hidden",!!user);
   document.getElementById("appSection").classList.toggle("hidden",!user);
 
   if(!user)return;
 
-  document.getElementById("userEmail").innerText=user.email;
+  document.getElementById("userEmail").innerText = user.email || "";
 
   ["customerSection","shopkeeperSection","adminSection"].forEach(id=>{
     document.getElementById(id).classList.add("hidden");
   });
 
-  if(user.uid===ADMIN_UID){
+  if(user.uid === ADMIN_UID){
     document.getElementById("adminSection").classList.remove("hidden");
     loadAdmin();
   }else{
@@ -212,195 +244,299 @@ auth.onAuthStateChanged(async user=>{
 });
 
 async function loadShops(){
-  const area=document.getElementById("areaFilter").value;
-  const list=document.getElementById("shopList");
-  list.innerHTML="Loading...";
+  const area = document.getElementById("areaFilter").value;
+  const list = document.getElementById("shopList");
+
+  list.innerHTML = "Loading shops...";
 
   try{
-    const snap=await db.collection("shops").where("approved","==",true).get();
-    list.innerHTML="";
-    snap.forEach(doc=>{
-      const s=doc.data();
-      if(s.active===false)return;
-      if(area&&s.area!==area)return;
+    const snap = await db.collection("shops")
+      .where("approved","==",true).get();
 
-      const div=document.createElement("div");
-      div.className="food";
-      const title=document.createElement("h3");
-      title.innerText=s.name;
-      const details=document.createElement("p");
-      details.innerText=(s.area||"")+" • "+(s.address||"");
-      const button=document.createElement("button");
-      button.innerText="View Menu";
-      button.onclick=()=>showMenu(doc.id,s);
+    list.innerHTML = "";
+
+    snap.forEach(doc=>{
+      const s = doc.data();
+
+      if(s.active === false)return;
+      if(area && s.area !== area)return;
+
+      const div = document.createElement("div");
+      div.className = "food";
+
+      const title = document.createElement("h3");
+      title.innerText = s.name;
+
+      const details = document.createElement("p");
+      details.innerText = (s.area || "") + " • " + (s.address || "");
+
+      const button = document.createElement("button");
+      button.innerText = "View Menu";
+      button.onclick = ()=>showMenu(doc.id,s);
+
       div.append(title,details,button);
       list.appendChild(div);
     });
-    if(!list.innerHTML)list.innerText="No approved shops found.";
-  }catch(e){list.innerText=e.message;}
+
+    if(!list.innerHTML){
+      list.innerText = "No approved shops found.";
+    }
+
+  }catch(error){
+    list.innerText = error.message;
+  }
 }
 
 function showMenu(shopId,shop){
-  selectedShop={id:shopId,...shop};
-  const list=document.getElementById("shopList");
-  list.innerHTML="<h3>"+shop.name+"</h3>";
+  const list = document.getElementById("shopList");
 
-  (shop.menu||[]).forEach((food,index)=>{
-    if(food.available===false)return;
-    const div=document.createElement("div");
-    div.className="food";
-    const name=document.createElement("b");
-    name.innerText=food.name+" - ₹"+food.price;
-    const button=document.createElement("button");
-    button.innerText="Add";
-    button.onclick=()=>addToCart(shopId,shop.name,food);
+  list.innerHTML = "";
+
+  const title = document.createElement("h3");
+  title.innerText = shop.name;
+  list.appendChild(title);
+
+  (shop.menu || []).forEach(food=>{
+    if(food.available === false)return;
+
+    const div = document.createElement("div");
+    div.className = "food";
+
+    const name = document.createElement("b");
+    name.innerText = food.name + " - ₹" + food.price;
+
+    const button = document.createElement("button");
+    button.innerText = "Add";
+
+    button.onclick = ()=>{
+      addToCart(shopId,shop.name,food);
+    };
+
     div.append(name,button);
     list.appendChild(div);
   });
 
-  const back=document.createElement("button");
-  back.className="secondary";
-  back.innerText="Back to Shops";
-  back.onclick=loadShops;
+  const back = document.createElement("button");
+  back.className = "secondary";
+  back.innerText = "Back to Shops";
+  back.onclick = loadShops;
+
   list.appendChild(back);
 }
 
 function addToCart(shopId,shopName,food){
-  if(cart.length&&cart[0].shopId!==shopId){
-    alert("Please complete or clear your current shop cart first.");
+  if(cart.length && cart[0].shopId !== shopId){
+    alert("Please complete your current shop cart first.");
     return;
   }
-  const existing=cart.find(x=>x.foodId===food.id);
-  if(existing)existing.quantity++;
-  else cart.push({
-    foodId:food.id||food.name,
-    shopId,shopName,
-    name:food.name,
-    price:Number(food.price),
-    quantity:1
-  });
+
+  const foodId = food.id || food.name;
+
+  const existing = cart.find(x=>x.foodId === foodId);
+
+  if(existing){
+    existing.quantity++;
+  }else{
+    cart.push({
+      foodId:foodId,
+      shopId:shopId,
+      shopName:shopName,
+      name:food.name,
+      price:Number(food.price),
+      quantity:1
+    });
+  }
+
   renderCart();
 }
 
 function renderCart(){
-  const list=document.getElementById("cartList");
-  list.innerHTML="";
-  let subtotal=0;
+  const list = document.getElementById("cartList");
+
+  list.innerHTML = "";
+
+  let subtotal = 0;
 
   cart.forEach((item,index)=>{
-    subtotal+=item.price*item.quantity;
-    const div=document.createElement("div");
-    div.innerText=item.name+" × "+item.quantity+" = ₹"+(item.price*item.quantity);
-    const remove=document.createElement("button");
-    remove.className="red";
-    remove.innerText="Remove";
-    remove.onclick=()=>{cart.splice(index,1);renderCart();};
+    subtotal += item.price * item.quantity;
+
+    const div = document.createElement("div");
+    div.innerText = item.name + " × " + item.quantity +
+      " = ₹" + (item.price * item.quantity);
+
+    const remove = document.createElement("button");
+    remove.className = "red";
+    remove.innerText = "Remove";
+
+    remove.onclick = ()=>{
+      cart.splice(index,1);
+      renderCart();
+    };
+
     div.appendChild(remove);
     list.appendChild(div);
   });
 
-  if(!cart.length)list.innerText="Your cart is empty.";
-  document.getElementById("cartTotal").innerText="Subtotal: ₹"+subtotal;
+  if(!cart.length){
+    list.innerText = "Your cart is empty.";
+  }
+
+  document.getElementById("cartTotal").innerText =
+    "Subtotal: ₹" + subtotal;
 }
 
 async function placeOrder(){
-  if(!cart.length){alert("Your cart is empty.");return;}
-  const address=document.getElementById("deliveryAddress").value.trim();
-  if(!address){alert("Enter delivery address.");return;}
+  if(!cart.length){
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const address = document.getElementById("deliveryAddress").value.trim();
+
+  if(!address){
+    alert("Enter delivery address.");
+    return;
+  }
 
   try{
-    const shopDoc=await db.collection("shops").doc(cart[0].shopId).get();
-    if(!shopDoc.exists||shopDoc.data().approved!==true||shopDoc.data().active===false){
+    const shopDoc = await db.collection("shops").doc(cart[0].shopId).get();
+
+    if(!shopDoc.exists ||
+       shopDoc.data().approved !== true ||
+       shopDoc.data().active === false){
       alert("This shop is not available.");
       return;
     }
 
-    const shop=shopDoc.data();
-    const subtotal=cart.reduce((sum,x)=>sum+x.price*x.quantity,0);
-    const charge=Number(shop.deliveryCharge||0);
-    const method=document.getElementById("paymentMethod").value;
+    const shop = shopDoc.data();
+
+    const subtotal = cart.reduce(
+      (sum,item)=>sum + item.price * item.quantity,0
+    );
+
+    const charge = Number(shop.deliveryCharge || 0);
+    const method = document.getElementById("paymentMethod").value;
 
     await db.collection("orders").add({
       customerId:currentUser.uid,
       shopId:cart[0].shopId,
       shopName:cart[0].shopName,
-      items:cart.map(x=>({...x})),
-      subtotal,
+      items:cart.map(item=>({...item})),
+      subtotal:subtotal,
       deliveryCharge:charge,
-      total:subtotal+charge,
-      address,
+      total:subtotal + charge,
+      address:address,
       paymentMethod:method,
-      paymentStatus:method==="COD"?"Pending":"Awaiting manual confirmation",
+      paymentStatus:method === "COD" ?
+        "Pending" : "Awaiting manual confirmation",
       status:"New",
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
 
     alert("Order placed successfully!");
-    cart=[];
+
+    cart = [];
     renderCart();
     loadMyOrders();
-  }catch(e){alert("Order failed: "+e.message);}
+
+  }catch(error){
+    alert("Order failed: " + error.message);
+  }
 }
 
 async function loadMyOrders(){
-  const box=document.getElementById("myOrders");
+  const box = document.getElementById("myOrders");
+
   try{
-    const snap=await db.collection("orders")
+    const snap = await db.collection("orders")
       .where("customerId","==",currentUser.uid).get();
-    box.innerHTML="";
+
+    box.innerHTML = "";
+
     snap.forEach(doc=>{
-      const o=doc.data();
-      const div=document.createElement("div");
-      div.className="food";
-      div.innerText=o.shopName+" | ₹"+o.total+" | "+o.status;
+      const o = doc.data();
+
+      const div = document.createElement("div");
+      div.className = "food";
+      div.innerText = o.shopName + " | ₹" +
+        o.total + " | " + o.status;
+
       box.appendChild(div);
     });
-    if(!box.innerHTML)box.innerText="No orders yet.";
-  }catch(e){box.innerText=e.message;}
+
+    if(!box.innerHTML){
+      box.innerText = "No orders yet.";
+    }
+
+  }catch(error){
+    box.innerText = error.message;
+  }
 }
 
 async function registerShop(){
-  const name=document.getElementById("shopName").value.trim();
-  const phone=document.getElementById("shopPhone").value.trim();
-  const address=document.getElementById("shopAddress").value.trim();
-  const area=document.getElementById("shopArea").value;
+  const name = document.getElementById("shopName").value.trim();
+  const phone = document.getElementById("shopPhone").value.trim();
+  const address = document.getElementById("shopAddress").value.trim();
+  const area = document.getElementById("shopArea").value;
 
-  if(!name||!phone||!address){
+  if(!name || !phone || !address){
     message("shopMessage","Please fill all shop details.");
     return;
   }
 
   try{
     await db.collection("shops").add({
-      name,phone,address,area,
+      name:name,
+      phone:phone,
+      address:address,
+      area:area,
       ownerId:currentUser.uid,
       ownerEmail:currentUser.email,
       approved:false,
       active:false,
       menu:[],
-      deliveryCharge:Number(document.getElementById("deliveryCharge").value||0),
+      deliveryCharge:Number(
+        document.getElementById("deliveryCharge").value || 0
+      ),
       upiId:document.getElementById("upiId").value.trim(),
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
+
     message("shopMessage","Registration submitted. Waiting for admin approval.");
+
     loadOwnerShop();
-  }catch(e){message("shopMessage",e.message);}
+
+  }catch(error){
+    message("shopMessage",error.message);
+  }
 }
 
 async function loadOwnerShop(){
-  const box=document.getElementById("ownerShop");
+  const box = document.getElementById("ownerShop");
+
   try{
-    const snap=await db.collection("shops")
+    const snap = await db.collection("shops")
       .where("ownerId","==",currentUser.uid).get();
-    box.innerHTML="";
+
+    box.innerHTML = "";
+
     snap.forEach(doc=>{
-      const s=doc.data();
-      const div=document.createElement("p");
-      div.innerText=s.name+" — "+(s.approved?"Approved":"Waiting for approval");
+      const s = doc.data();
+
+      const div = document.createElement("p");
+      div.innerText = s.name + " — " +
+        (s.approved ? "Approved" : "Waiting for approval");
+
       box.appendChild(div);
     });
-    if(!box.innerHTML)box.innerText="You have not registered a shop yet.";
-  }catch(e){box.innerText=e.message;}
+
+    if(!box.innerHTML){
+      box.innerText = "You have not registered a shop yet.";
+    }
+
+  }catch(error){
+    box.innerText = error.message;
+  }
 }
 
 async function loadAdmin(){
@@ -409,67 +545,96 @@ async function loadAdmin(){
 }
 
 async function loadAdminShops(){
-  const box=document.getElementById("adminShops");
-  box.innerHTML="Loading...";
+  const box = document.getElementById("adminShops");
+
+  box.innerHTML = "Loading...";
+
   try{
-    const snap=await db.collection("shops").get();
-    box.innerHTML="";
+    const snap = await db.collection("shops").get();
+
+    box.innerHTML = "";
+
     snap.forEach(doc=>{
-      const s=doc.data();
-      const div=document.createElement("div");
-      div.className="food";
+      const s = doc.data();
 
-      const title=document.createElement("b");
-      title.innerText=s.name+" ("+s.area+")";
-      const status=document.createElement("p");
-      status.innerText="Approval: "+(s.approved?"Approved":"Pending")+" | Active: "+(s.active?"Yes":"No");
+      const div = document.createElement("div");
+      div.className = "food";
 
-      const approve=document.createElement("button");
-      approve.innerText=s.approved?"Approved":"Approve";
-      approve.onclick=()=>updateShop(doc.id,{approved:true,active:true});
+      const title = document.createElement("b");
+      title.innerText = s.name + " (" + s.area + ")";
 
-      const toggle=document.createElement("button");
-      toggle.className="secondary";
-      toggle.innerText=s.active?"Deactivate":"Activate";
-      toggle.onclick=()=>updateShop(doc.id,{active:!s.active});
+      const status = document.createElement("p");
+      status.innerText =
+        "Approval: " + (s.approved ? "Approved" : "Pending") +
+        " | Active: " + (s.active ? "Yes" : "No");
 
-      const remove=document.createElement("button");
-      remove.className="red";
-      remove.innerText="Delete";
-      remove.onclick=()=>deleteShop(doc.id);
+      const approve = document.createElement("button");
+      approve.innerText = s.approved ? "Approved" : "Approve";
+      approve.onclick = ()=>updateShop(doc.id,{
+        approved:true,
+        active:true
+      });
+
+      const toggle = document.createElement("button");
+      toggle.className = "secondary";
+      toggle.innerText = s.active ? "Deactivate" : "Activate";
+      toggle.onclick = ()=>updateShop(doc.id,{
+        active:!s.active
+      });
+
+      const remove = document.createElement("button");
+      remove.className = "red";
+      remove.innerText = "Delete";
+      remove.onclick = ()=>deleteShop(doc.id);
 
       div.append(title,status,approve,toggle,remove);
       box.appendChild(div);
     });
-    if(!box.innerHTML)box.innerText="No shops registered.";
-  }catch(e){box.innerText=e.message;}
+
+    if(!box.innerHTML){
+      box.innerText = "No shops registered.";
+    }
+
+  }catch(error){
+    box.innerText = error.message;
+  }
 }
 
 async function updateShop(id,changes){
   try{
     await db.collection("shops").doc(id).update(changes);
     loadAdminShops();
-  }catch(e){alert(e.message);}
+  }catch(error){
+    alert(error.message);
+  }
 }
 
 async function deleteShop(id){
   if(!confirm("Delete this shop?"))return;
+
   try{
     await db.collection("shops").doc(id).delete();
     loadAdminShops();
-  }catch(e){alert(e.message);}
+  }catch(error){
+    alert(error.message);
+  }
 }
 
 async function adminAddShop(){
-  const name=document.getElementById("newShopName").value.trim();
-  const phone=document.getElementById("newShopPhone").value.trim();
-  const address=document.getElementById("newShopAddress").value.trim();
+  const name = document.getElementById("newShopName").value.trim();
+  const phone = document.getElementById("newShopPhone").value.trim();
+  const address = document.getElementById("newShopAddress").value.trim();
 
-  if(!name||!phone||!address){alert("Fill all shop details.");return;}
+  if(!name || !phone || !address){
+    alert("Fill all shop details.");
+    return;
+  }
 
   try{
     await db.collection("shops").add({
-      name,phone,address,
+      name:name,
+      phone:phone,
+      address:address,
       area:document.getElementById("newShopArea").value,
       ownerId:ADMIN_UID,
       ownerEmail:currentUser.email,
@@ -480,51 +645,80 @@ async function adminAddShop(){
       upiId:"",
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
+
     alert("Shop added successfully.");
     loadAdminShops();
-  }catch(e){alert(e.message);}
+
+  }catch(error){
+    alert(error.message);
+  }
 }
 
 async function loadAdminOrders(){
-  const box=document.getElementById("adminOrders");
-  box.innerHTML="Loading...";
+  const box = document.getElementById("adminOrders");
+
+  box.innerHTML = "Loading...";
+
   try{
-    const snap=await db.collection("orders").get();
-    box.innerHTML="";
+    const snap = await db.collection("orders").get();
+
+    box.innerHTML = "";
+
     snap.forEach(doc=>{
-      const o=doc.data();
-      const div=document.createElement("div");
-      div.className="food";
+      const o = doc.data();
 
-      const details=document.createElement("p");
-      details.innerText=o.shopName+" | ₹"+o.total+" | "+o.status;
+      const div = document.createElement("div");
+      div.className = "food";
 
-      const address=document.createElement("p");
-      address.innerText=o.address;
+      const details = document.createElement("p");
+      details.innerText = o.shopName + " | ₹" +
+        o.total + " | " + o.status;
 
-      const select=document.createElement("select");
-      ["New","Accepted","Preparing","Ready","Delivered","Cancelled"].forEach(status=>{
-        const option=document.createElement("option");
-        option.value=status;
-        option.innerText=status;
-        if(o.status===status)option.selected=true;
+      const address = document.createElement("p");
+      address.innerText = o.address;
+
+      const select = document.createElement("select");
+
+      ["New","Accepted","Preparing","Ready","Delivered","Cancelled"]
+      .forEach(status=>{
+        const option = document.createElement("option");
+        option.value = status;
+        option.innerText = status;
+
+        if(o.status === status){
+          option.selected = true;
+        }
+
         select.appendChild(option);
       });
 
-      const update=document.createElement("button");
-      update.innerText="Update Status";
-      update.onclick=async()=>{
+      const update = document.createElement("button");
+      update.innerText = "Update Status";
+
+      update.onclick = async()=>{
         try{
-          await db.collection("orders").doc(doc.id).update({status:select.value});
+          await db.collection("orders").doc(doc.id).update({
+            status:select.value
+          });
+
           alert("Order status updated.");
-        }catch(e){alert(e.message);}
+
+        }catch(error){
+          alert(error.message);
+        }
       };
 
       div.append(details,address,select,update);
       box.appendChild(div);
     });
-    if(!box.innerHTML)box.innerText="No orders yet.";
-  }catch(e){box.innerText=e.message;}
+
+    if(!box.innerHTML){
+      box.innerText = "No orders yet.";
+    }
+
+  }catch(error){
+    box.innerText = error.message;
+  }
 }
 </script>
 
