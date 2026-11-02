@@ -2,545 +2,313 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breakfast Express</title>
-
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#fff8ed;color:#333}
-header{background:#ff8c00;color:white;text-align:center;padding:20px}
-nav{display:flex;flex-wrap:wrap;justify-content:center;background:white;position:sticky;top:0;padding:10px;z-index:5}
-nav button{border:0;background:white;padding:10px;font-weight:bold}
-.container{padding:15px}
-.banner,.box,.card{background:white;padding:15px;border-radius:12px;margin:12px 0;box-shadow:0 2px 6px #ddd}
-.banner{text-align:center;background:#ffe0a8}
-h2{color:#a54c00}
-input,textarea,select{width:100%;padding:12px;margin:7px 0;border:1px solid #ccc;border-radius:7px}
-button.action{background:#ff8c00;color:white;border:0;border-radius:7px;padding:11px;margin:4px}
-button.danger{background:#d93636;color:white;border:0;border-radius:7px;padding:10px}
-button.success{background:#198754;color:white;border:0;border-radius:7px;padding:10px}
-button{cursor:pointer}
+body{font-family:Arial;margin:0;background:#fff8ed;color:#333}
+header{background:#e87516;color:white;padding:20px;text-align:center}
+.container{padding:15px;max-width:650px;margin:auto}
+.card{background:white;padding:15px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,select,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box;border-radius:7px;border:1px solid #ccc;font-size:15px}
+button{background:#e87516;color:white;border:0;font-weight:bold}
+.secondary{background:#444}
 .hidden{display:none}
-.products{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.food{font-size:42px;text-align:center}
-.price{color:#e87500;font-weight:bold}
-.card{text-align:center;margin:0}
-.card img{width:100%;height:110px;object-fit:cover;border-radius:8px}
-.item{border-bottom:1px solid #ddd;padding:10px}
-footer{background:#333;color:white;text-align:center;padding:20px;margin-top:20px}
+h2{color:#d96712}
+.item{border-bottom:1px solid #ddd;padding:10px 0}
 </style>
 </head>
-
 <body>
 
 <header>
-<h1>🍳 BREAKFAST EXPRESS</h1>
-<p>Fresh Breakfast • Fast Delivery</p>
-<p>Serving Kudasan</p>
+<h1>🍽️ Breakfast Express</h1>
+<p>તમારો નાસ્તો, હવે તમારા ઘરે!</p>
 </header>
-
-<nav>
-<button onclick="show('home')">🏠 Home</button>
-<button onclick="show('menu')">🍽️ Menu</button>
-<button onclick="show('cart')">🛒 Cart (<span id="count">0</span>)</button>
-<button onclick="show('shop')">🏪 Register Shop</button>
-<button onclick="show('ownerLogin')">👨‍🍳 Shop Owner</button>
-<button onclick="show('admin')">🔐 Admin</button>
-</nav>
 
 <div class="container">
 
-<section id="home">
-<div class="banner">
-<h2>Good Morning! ☀️</h2>
-<h3>Your Favourite Breakfast Delivered</h3>
-<button class="action" onclick="show('menu')">ORDER NOW</button>
+<div class="card" id="auth">
+<h2>Login / Register</h2>
+<input id="email" type="email" placeholder="Email address">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button onclick="register()">Create Account</button>
+<p id="message"></p>
 </div>
-<h2>Nearby Breakfast Shops</h2>
-<div id="approvedShops"></div>
-</section>
 
-<section id="menu" class="hidden">
-<h2>Breakfast & Snacks</h2>
-<div id="products" class="products"></div>
-</section>
+<div id="app" class="hidden">
 
-<section id="cart" class="hidden">
-<h2>🛒 Shopping Cart</h2>
-<div id="cartitems"></div>
-<h3 id="total">Total: ₹0</h3>
-<input id="customer" placeholder="Customer Name">
-<input id="phone" placeholder="Mobile Number" type="tel">
-<textarea id="address" placeholder="Delivery Address"></textarea>
-<button class="action" onclick="placeOrder()">PLACE ORDER</button>
-</section>
+<div class="card">
+<h2>Welcome!</h2>
+<p id="userEmail"></p>
+<button onclick="logout()" class="secondary">Logout</button>
+</div>
 
-<section id="shop" class="hidden">
-<h2>🏪 Register Your Shop</h2>
-<input id="shopname" placeholder="Shop Name">
-<input id="owner" placeholder="Owner Name">
-<input id="shopphone" placeholder="Mobile Number" type="tel">
-<input id="shopaddress" placeholder="Shop Address">
-<input id="shoppass" type="password" placeholder="Create Shop Password">
-<select id="category">
-<option>Breakfast</option>
-<option>Snacks</option>
-<option>Breakfast & Snacks</option>
+<div class="card">
+<h2>Register Your Shop</h2>
+<input id="shopName" placeholder="Shop name">
+<input id="ownerName" placeholder="Owner name">
+<input id="shopPhone" placeholder="Mobile number">
+<input id="shopAddress" placeholder="Shop address">
+<select id="shopArea">
+<option>Kudasan</option>
+<option>Raysan</option>
+<option>Sargasan</option>
+<option>PDPU</option>
 </select>
-<button class="action" onclick="registerShop()">SUBMIT SHOP</button>
-<p id="shopmsg"></p>
-</section>
-
-<section id="ownerLogin" class="hidden">
-<h2>👨‍🍳 Shop Owner Login</h2>
-<input id="loginPhone" placeholder="Registered Mobile Number">
-<input id="loginPass" type="password" placeholder="Shop Password">
-<button class="action" onclick="ownerLogin()">LOGIN</button>
-<p id="loginmsg"></p>
-</section>
-
-<section id="dashboard" class="hidden">
-<h2>🏪 Shop Owner Dashboard</h2>
-<div id="ownerInfo"></div>
-
-<div class="box">
-<h3>➕ Add Food Item</h3>
-<input id="foodname" placeholder="Food Name">
-<input id="foodprice" type="number" placeholder="Price ₹">
-<input id="foodimage" placeholder="Food Image URL (optional)">
-<button class="action" onclick="addFood()">ADD FOOD</button>
+<button onclick="registerShop()">Submit Shop for Approval</button>
 </div>
 
-<h3>Your Food Menu</h3>
-<div id="ownerMenu"></div>
-
-<h3>📦 Customer Orders</h3>
-<div id="ownerOrders"></div>
-
-<button class="action" onclick="ownerLogout()">LOGOUT</button>
-</section>
-
-<section id="admin" class="hidden">
-<h2>🔐 Admin Dashboard</h2>
-<p>Demo administration panel</p>
-<h3>Shop Registration Requests</h3>
-<div id="shoplist"></div>
-<h3>All Customer Orders</h3>
-<div id="orders"></div>
-</section>
-
-</div>
-
-<footer>
-<h3>🍳 BREAKFAST EXPRESS</h3>
-<p>Your Morning Food Partner</p>
-<p>Serving Kudasan</p>
-</footer>
-
-<script>
-
-let currentOwner=null;
-let cart=[];
-
-function getData(key){
-return JSON.parse(localStorage.getItem(key)||'[]');
-}
-
-function saveData(key,data){
-localStorage.setItem(key,JSON.stringify(data));
-}
-
-function show(id){
-document.querySelectorAll('.container section').forEach(s=>{
-s.classList.add('hidden');
-});
-document.getElementById(id).classList.remove('hidden');
-
-if(id==='home')renderShops();
-if(id==='cart')renderCart();
-if(id==='admin')renderAdmin();
-if(id==='menu')renderMenu();
-}
-
-function registerShop(){
-
-let name=shopname.value.trim();
-let owner= document.getElementById('owner').value.trim();
-let phone=shopphone.value.trim();
-let address=shopaddress.value.trim();
-let pass=shoppass.value;
-
-if(!name||!owner||!phone||!address||!pass){
-alert('Please fill all fields');
-return;
-}
-
-if(!/^[0-9]{10}$/.test(phone)){
-alert('Enter valid 10 digit mobile number');
-return;
-}
-
-let shops=getData('shops');
-
-if(shops.some(s=>s.phone===phone)){
-alert('This mobile number is already registered');
-return;
-}
-
-shops.push({
-id:Date.now().toString(),
-name,owner,phone,address,
-password:pass,
-category:category.value,
-status:'Pending'
-});
-
-saveData('shops',shops);
-
-shopmsg.innerText='Registration submitted. Please wait for admin approval.';
-
-['shopname','owner','shopphone','shopaddress','shoppass'].forEach(id=>{
-document.getElementById(id).value='';
-});
-}
-
-function renderShops(){
-
-let shops=getData('shops').filter(s=>s.status==='Approved');
-
-approvedShops.innerHTML=shops.map(s=>`
-<div class="box">
-<h3>🏪 ${s.name}</h3>
-<p>📍 ${s.address}</p>
-<p>${s.category}</p>
-<button class="action" onclick="openShop('${s.id}')">VIEW SHOP</button>
-</div>
-`).join('')||'<p>No approved shops available yet.</p>';
-}
-
-function openShop(id){
-let shop=getData('shops').find(s=>s.id===id);
-if(!shop)return;
-
-let foods=getData('foods').filter(f=>f.shopId===id&&f.available);
-
-document.getElementById('products').innerHTML=
-`<h3 style="grid-column:1/-1">${shop.name}</h3>`+
-(foods.map(f=>`
 <div class="card">
-${f.image?`<img src="${f.image}" alt="${f.name}">`:`<div class="food">🍽️</div>`}
-<h3>${f.name}</h3>
-<p class="price">₹${f.price}</p>
-<button class="action" onclick="addToCart('${f.id}')">ADD +</button>
+<h2>Available Shops</h2>
+<div id="shops">Loading shops...</div>
 </div>
-`).join('')||'<p>No food items available.</p>');
 
-show('menu');
-}
-
-function renderMenu(){
-
-let foods=getData('foods').filter(f=>f.available);
-
-document.getElementById('products').innerHTML=
-foods.map(f=>`
 <div class="card">
-${f.image?`<img src="${f.image}" alt="${f.name}">`:`<div class="food">🍽️</div>`}
-<h3>${f.name}</h3>
-<p>Shop: ${getData('shops').find(s=>s.id===f.shopId)?.name||'Shop'}</p>
-<p class="price">₹${f.price}</p>
-<button class="action" onclick="addToCart('${f.id}')">ADD +</button>
+<h2>My Orders</h2>
+<div id="myOrders"></div>
 </div>
-`).join('')||'<p>No food items available.</p>';
+
+<div class="card hidden" id="adminPanel">
+<h2>👑 Admin Dashboard</h2>
+<h3>Shop Registrations</h3>
+<div id="adminShops"></div>
+<h3>All Orders</h3>
+<div id="adminOrders"></div>
+<h3>Add Shop Manually</h3>
+<input id="newShopName" placeholder="Shop name">
+<input id="newShopPhone" placeholder="Phone">
+<input id="newShopAddress" placeholder="Address">
+<select id="newShopArea">
+<option>Kudasan</option>
+<option>Raysan</option>
+<option>Sargasan</option>
+<option>PDPU</option>
+</select>
+<button onclick="addShop()">Add Approved Shop</button>
+</div>
+
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth, createUserWithEmailAndPassword,
+signInWithEmailAndPassword, signOut,
+onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+getFirestore, collection, addDoc, getDocs,
+query, where, doc, updateDoc, deleteDoc,
+serverTimestamp
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBmLCgp-lhyVBZ18uIaGs785H55o6LcFi8",
+authDomain: "project-2153778259975197488.firebaseapp.com",
+projectId: "project-2153778259975197488",
+storageBucket: "project-2153778259975197488.firebasestorage.app",
+messagingSenderId: "854726959400",
+appId: "1:854726959400:web:fc87228ca991e1a8b4b01d",
+measurementId: "G-S1CFHKMLEY"
+};
+
+const appFirebase = initializeApp(firebaseConfig);
+const auth = getAuth(appFirebase);
+const db = getFirestore(appFirebase);
+
+const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
+
+window.login = async function(){
+try{
+await signInWithEmailAndPassword(auth,email.value,password.value);
+message.innerText="Login successful";
+}catch(e){message.innerText=e.message;}
+};
+
+window.register = async function(){
+try{
+await createUserWithEmailAndPassword(auth,email.value,password.value);
+message.innerText="Account created";
+}catch(e){message.innerText=e.message;}
+};
+
+window.logout = async function(){
+await signOut(auth);
+};
+
+onAuthStateChanged(auth,async user=>{
+authDiv(user);
+if(user){
+await loadShops();
+await loadOrders();
+if(user.uid===ADMIN_UID){
+adminPanel.classList.remove("hidden");
+await loadAdmin();
 }
-
-function addToCart(id){
-
-let food=getData('foods').find(f=>f.id===id);
-if(!food||!food.available)return;
-
-if(cart.length&&cart[0].shopId!==food.shopId){
-alert('Please order from one shop at a time. Complete or clear your current cart first.');
-return;
 }
-
-cart.push(food);
-document.getElementById('count').innerText=cart.length;
-alert(food.name+' added to cart');
-}
-
-function renderCart(){
-
-let total=0;
-
-cartitems.innerHTML=cart.map((f,i)=>{
-total+=Number(f.price);
-return `<div class="item">${f.name} - ₹${f.price}
-<button class="danger" onclick="removeCart(${i})">REMOVE</button>
-</div>`;
-}).join('')||'Your cart is empty';
-
-document.getElementById('total').innerText='Total: ₹'+total;
-}
-
-function removeCart(i){
-cart.splice(i,1);
-document.getElementById('count').innerText=cart.length;
-renderCart();
-}
-
-function placeOrder(){
-
-if(!cart.length){
-alert('Your cart is empty');
-return;
-}
-
-let name=customer.value.trim();
-let number=phone.value.trim();
-let addr=address.value.trim();
-
-if(!name||!number||!addr){
-alert('Please enter all delivery details');
-return;
-}
-
-if(!/^[0-9]{10}$/.test(number)){
-alert('Enter valid mobile number');
-return;
-}
-
-let orders=getData('orders');
-
-orders.push({
-id:Date.now().toString(),
-shopId:cart[0].shopId,
-name,phone:number,address:addr,
-items:cart.map(f=>({name:f.name,price:f.price})),
-total:cart.reduce((a,f)=>a+Number(f.price),0),
-date:new Date().toLocaleString(),
-status:'New'
 });
 
-saveData('orders',orders);
-
-alert('Order placed successfully! Demo order saved.');
-
-cart=[];
-document.getElementById('count').innerText=0;
-customer.value='';
-phone.value='';
-address.value='';
-show('home');
+function authDiv(user){
+auth.classList.toggle("hidden",!!user);
+document.getElementById("app").classList.toggle("hidden",!user);
+if(user)userEmail.innerText=user.email;
 }
 
-function ownerLogin(){
+window.registerShop = async function(){
+const user=auth.currentUser;
+if(!user)return alert("Please login first");
 
-let number=loginPhone.value.trim();
-let pass=loginPass.value;
-
-let shop=getData('shops').find(s=>
-s.phone===number&&s.password===pass
-);
-
-if(!shop){
-loginmsg.innerText='Incorrect mobile number or password.';
-return;
-}
-
-if(shop.status!=='Approved'){
-loginmsg.innerText='Your shop is waiting for admin approval.';
-return;
-}
-
-currentOwner=shop;
-loginmsg.innerText='';
-show('dashboard');
-renderDashboard();
-}
-
-function renderDashboard(){
-
-if(!currentOwner)return;
-
-ownerInfo.innerHTML=`
-<h3>${currentOwner.name}</h3>
-<p>📍 ${currentOwner.address}</p>
-<p>Category: ${currentOwner.category}</p>
-`;
-
-let foods=getData('foods').filter(f=>f.shopId===currentOwner.id);
-
-ownerMenu.innerHTML=foods.map(f=>`
-<div class="box">
-<b>${f.name}</b> - ₹${f.price}<br>
-${f.image?`<img src="${f.image}" width="100" alt="Food">`:''}
-<p>Status: ${f.available?'Available':'Out of Stock'}</p>
-<button class="action" onclick="editFood('${f.id}')">EDIT</button>
-<button class="action" onclick="toggleFood('${f.id}')">
-${f.available?'OUT OF STOCK':'MAKE AVAILABLE'}
-</button>
-<button class="danger" onclick="deleteFood('${f.id}')">DELETE</button>
-</div>
-`).join('')||'No food items added yet.';
-
-let orders=getData('orders').filter(o=>o.shopId===currentOwner.id);
-
-ownerOrders.innerHTML=orders.map(o=>`
-<div class="box">
-<b>Order #${o.id}</b>
-<p>Customer: ${o.name}</p>
-<p>Phone: ${o.phone}</p>
-<p>Address: ${o.address}</p>
-<p>Items: ${o.items.map(i=>i.name+' ₹'+i.price).join(', ')}</p>
-<p>Total: ₹${o.total}</p>
-<p>Status: ${o.status}</p>
-<button class="success" onclick="completeOrder('${o.id}')">MARK COMPLETED</button>
-</div>
-`).join('')||'No orders received yet.';
-}
-
-function addFood(){
-
-if(!currentOwner)return;
-
-let name=foodname.value.trim();
-let price=Number(foodprice.value);
-let image=foodimage.value.trim();
-
-if(!name||!price||price<=0){
-alert('Enter food name and valid price');
-return;
-}
-
-let foods=getData('foods');
-
-foods.push({
-id:Date.now().toString(),
-shopId:currentOwner.id,
-name,price,image,
-available:true
+try{
+await addDoc(collection(db,"shops"),{
+name:shopName.value,
+ownerName:ownerName.value,
+phone:shopPhone.value,
+address:shopAddress.value,
+area:shopArea.value,
+ownerId:user.uid,
+approved:false,
+active:true,
+menu:[],
+createdAt:serverTimestamp()
 });
+alert("Shop registration submitted for admin approval");
+}catch(e){alert(e.message);}
+};
 
-saveData('foods',foods);
-
-foodname.value='';
-foodprice.value='';
-foodimage.value='';
-
-renderDashboard();
-alert('Food item added successfully');
-}
-
-function editFood(id){
-
-let foods=getData('foods');
-let food=foods.find(f=>f.id===id&&f.shopId===currentOwner.id);
-if(!food)return;
-
-let name=prompt('Food name',food.name);
-if(name===null)return;
-
-let price=prompt('Price',food.price);
-if(price===null)return;
-
-if(!name.trim()||!Number(price)||Number(price)<=0){
-alert('Invalid details');
-return;
-}
-
-food.name=name.trim();
-food.price=Number(price);
-
-saveData('foods',foods);
-renderDashboard();
-}
-
-function toggleFood(id){
-
-let foods=getData('foods');
-let food=foods.find(f=>f.id===id&&f.shopId===currentOwner.id);
-if(!food)return;
-
-food.available=!food.available;
-saveData('foods',foods);
-renderDashboard();
-}
-
-function deleteFood(id){
-
-if(!confirm('Delete this food item?'))return;
-
-let foods=getData('foods').filter(f=>
-!(f.id===id&&f.shopId===currentOwner.id)
-);
-
-saveData('foods',foods);
-renderDashboard();
-}
-
-function completeOrder(id){
-
-let orders=getData('orders');
-let order=orders.find(o=>o.id===id&&o.shopId===currentOwner.id);
-if(!order)return;
-
-order.status='Completed';
-saveData('orders',orders);
-renderDashboard();
-}
-
-function ownerLogout(){
-currentOwner=null;
-show('home');
-}
-
-function renderAdmin(){
-
-let shops=getData('shops');
-
-shoplist.innerHTML=shops.map((s,i)=>`
-<div class="box">
+async function loadShops(){
+try{
+const q=query(collection(db,"shops"),
+where("approved","==",true),
+where("active","==",true));
+const snap=await getDocs(q);
+shops.innerHTML="";
+snap.forEach(d=>{
+const s=d.data();
+shops.innerHTML+=`
+<div class="item">
 <h3>${s.name}</h3>
-<p>Owner: ${s.owner}</p>
-<p>Phone: ${s.phone}</p>
-<p>Address: ${s.address}</p>
-<p>Status: ${s.status}</p>
-${s.status==='Pending'?
-`<button class="success" onclick="approveShop('${s.id}')">APPROVE SHOP</button>`:
-'Approved'}
-</div>
-`).join('')||'No shop registrations';
-
-orders.innerHTML=getData('orders').map(o=>`
-<div class="box">
-<b>${o.name}</b>
-<p>Phone: ${o.phone}</p>
-<p>Shop: ${getData('shops').find(s=>s.id===o.shopId)?.name||'Shop'}</p>
-<p>Items: ${o.items.map(i=>i.name).join(', ')}</p>
-<p>Total: ₹${o.total}</p>
-<p>Status: ${o.status}</p>
-</div>
-`).join('')||'No orders yet';
+<p>${s.area} | ${s.address||""}</p>
+<p>Phone: ${s.phone||""}</p>
+<button onclick="orderShop('${d.id}','${s.name}')">Place Order</button>
+</div>`;
+});
+if(snap.empty)shops.innerText="No approved shops available yet.";
+}catch(e){shops.innerText=e.message;}
 }
 
-function approveShop(id){
+window.orderShop = async function(id,name){
+const item=prompt("Enter food item and quantity:");
+if(!item)return;
+const price=Number(prompt("Enter total amount (₹):"));
+if(!Number.isFinite(price)||price<=0)return alert("Enter a valid amount");
 
-let shops=getData('shops');
-let shop=shops.find(s=>s.id===id);
-if(!shop)return;
+const address=prompt("Enter delivery address:");
+if(!address)return;
 
-shop.status='Approved';
-saveData('shops',shops);
+try{
+await addDoc(collection(db,"orders"),{
+customerId:auth.currentUser.uid,
+shopId:id,
+shopName:name,
+items:item,
+total:price,
+address:address,
+status:"New",
+createdAt:serverTimestamp()
+});
+alert("Order placed successfully");
+await loadOrders();
+}catch(e){alert(e.message);}
+};
 
-renderAdmin();
-renderShops();
-alert('Shop approved!');
+async function loadOrders(){
+try{
+const q=query(collection(db,"orders"),
+where("customerId","==",auth.currentUser.uid));
+const snap=await getDocs(q);
+myOrders.innerHTML="";
+snap.forEach(d=>{
+const o=d.data();
+myOrders.innerHTML+=`<div class="item">
+${o.shopName}<br>${o.items}<br>
+₹${o.total}<br>Status: ${o.status}
+</div>`;
+});
+}catch(e){myOrders.innerText=e.message;}
 }
 
-renderShops();
-renderMenu();
+async function loadAdmin(){
+const shopSnap=await getDocs(collection(db,"shops"));
+adminShops.innerHTML="";
+shopSnap.forEach(d=>{
+const s=d.data();
+adminShops.innerHTML+=`
+<div class="item">
+<b>${s.name}</b> - ${s.area}
+<p>${s.approved?"Approved":"Pending"}</p>
+<button onclick="approveShop('${d.id}')">Approve Shop</button>
+<button class="secondary" onclick="removeShop('${d.id}')">Delete Shop</button>
+</div>`;
+});
 
+const orderSnap=await getDocs(collection(db,"orders"));
+adminOrders.innerHTML="";
+orderSnap.forEach(d=>{
+const o=d.data();
+adminOrders.innerHTML+=`
+<div class="item">
+<b>${o.shopName}</b><br>${o.items}<br>
+₹${o.total}<br>${o.address}<br>
+Status: ${o.status}
+<button onclick="completeOrder('${d.id}')">Mark Completed</button>
+</div>`;
+});
+}
+
+window.approveShop=async function(id){
+await updateDoc(doc(db,"shops",id),{approved:true});
+alert("Shop approved");
+await loadAdmin();
+await loadShops();
+};
+
+window.removeShop=async function(id){
+if(confirm("Delete this shop?")){
+await deleteDoc(doc(db,"shops",id));
+await loadAdmin();
+await loadShops();
+}
+};
+
+window.completeOrder=async function(id){
+await updateDoc(doc(db,"orders",id),{status:"Completed"});
+await loadAdmin();
+};
+
+window.addShop=async function(){
+try{
+await addDoc(collection(db,"shops"),{
+name:newShopName.value,
+phone:newShopPhone.value,
+address:newShopAddress.value,
+area:newShopArea.value,
+ownerId:auth.currentUser.uid,
+approved:true,
+active:true,
+menu:[],
+createdAt:serverTimestamp()
+});
+alert("Shop added successfully");
+await loadAdmin();
+await loadShops();
+}catch(e){alert(e.message);}
+};
 </script>
 </body>
 </html>
