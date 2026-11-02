@@ -2,36 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breakfast Express</title>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#fff8ed;color:#333}
-header{background:#e87516;color:white;text-align:center;padding:18px}
-header h1{margin:5px}
-.container{max-width:850px;margin:auto;padding:12px}
-.card{background:white;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 2px 7px #ddd}
-h2{color:#d96712}
-input,select,textarea,button{
-width:100%;padding:12px;margin:7px 0;
-border:1px solid #ccc;border-radius:8px;font-size:16px
+body {
+  font-family: Arial, sans-serif;
+  background: #fff8ed;
+  margin: 0;
+  color: #333;
 }
-textarea{min-height:70px}
-button{background:#e87516;color:white;border:0;font-weight:bold}
-button.green{background:#16843b}
-button.dark{background:#444}
-button.red{background:#b83232}
-button.blue{background:#1769aa}
-.hidden{display:none!important}
-.small{font-size:13px;color:#666}
-.food{border:1px solid #eee;padding:12px;border-radius:10px;margin:12px 0;background:#fffaf4}
-.food img{width:100%;max-height:190px;object-fit:cover;border-radius:8px}
-.price{color:#16843b;font-weight:bold;font-size:19px}
-.row{display:flex;gap:8px;align-items:center}
-.row button{width:auto;flex:1}
-.badge{background:#e87516;color:white;padding:5px 9px;border-radius:20px;font-size:12px}
-.item{padding:12px 0;border-bottom:1px solid #ddd}
+header {
+  background: #f47b20;
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+header h1 { margin: 0; }
+.container {
+  max-width: 650px;
+  margin: 15px auto;
+  padding: 15px;
+}
+.card {
+  background: white;
+  padding: 15px;
+  margin: 12px 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #ddd;
+}
+input, select, button, textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 7px 0;
+  box-sizing: border-box;
+  border-radius: 7px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+button {
+  background: #f47b20;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+button.secondary { background: #555; }
+button.green { background: #168747; }
+.hidden { display: none; }
+.price { color: #168747; font-weight: bold; }
+h2 { color: #e66c16; }
 </style>
 </head>
 
@@ -40,1151 +64,608 @@ button.blue{background:#1769aa}
 <header>
 <h1>🍽️ Breakfast Express</h1>
 <p>તમારો નાસ્તો, હવે તમારા ઘરે!</p>
-<p>Kudasan | Raysan | Sargasan | PDPU</p>
 </header>
 
 <div class="container">
 
-<!-- LOGIN -->
-
-<div class="card" id="authSection">
-<h2>Welcome to Breakfast Express</h2>
+<div id="loginBox" class="card">
+<h2>Welcome</h2>
 <input id="email" type="email" placeholder="Email address">
 <input id="password" type="password" placeholder="Password">
-<button id="loginBtn">Login</button>
-<button id="registerBtn" class="dark">Create Account</button>
-<p id="authMsg"></p>
+
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="register()">Create Customer Account</button>
+
+<p id="message"></p>
 </div>
 
-<div id="appSection" class="hidden">
+<div id="app" class="hidden">
 
 <div class="card">
-<p>Welcome: <b id="userEmail"></b></p>
-<p id="userRole" class="badge"></p>
-<button id="logoutBtn" class="dark">Logout</button>
+<p id="welcome"></p>
+<button class="secondary" onclick="logout()">Logout</button>
 </div>
 
-<!-- CUSTOMER -->
+<div id="customerSection" class="hidden">
 
-<section id="customerSection">
+<h2>Available Breakfast Shops</h2>
 
-<div class="card">
-<h2>🍴 Find Breakfast Shops</h2>
-<select id="areaFilter">
+<select id="area" onchange="loadShops()">
 <option value="">All Areas</option>
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<div id="shopList">Loading shops...</div>
+
+<div id="shopList"></div>
+
+<h2>Your Cart</h2>
+<div id="cart"></div>
+
+<input id="deliveryAddress" placeholder="Enter delivery address">
+
+<select id="payment">
+<option value="COD">Cash on Delivery</option>
+<option value="UPI">UPI Payment</option>
+</select>
+
+<button onclick="placeOrder()">Place Order</button>
+
+<h2>My Orders</h2>
+<div id="myOrders"></div>
+
 </div>
 
-<div class="card">
-<h2>🛒 My Shopping Cart</h2>
-<div id="cartList">Your cart is empty.</div>
-<h3 id="cartTotal">Total: ₹0</h3>
-<button id="checkoutBtn" class="green">Proceed to Checkout</button>
-</div>
+<div id="ownerSection" class="hidden">
+
+<h2>Shopkeeper Registration</h2>
 
 <div class="card">
-<h2>📦 My Orders</h2>
-<div id="customerOrders"></div>
-</div>
+<input id="shopName" placeholder="Shop name">
+<input id="shopPhone" placeholder="Mobile number">
+<input id="shopAddress" placeholder="Shop address">
 
-</section>
-
-<!-- SHOPKEEPER -->
-
-<section id="shopSection" class="hidden">
-
-<div class="card">
-<h2>🏪 Shopkeeper Dashboard</h2>
-<div id="ownerShopInfo">Loading your shops...</div>
-</div>
-
-<div class="card">
-<h2>Shop Settings</h2>
-<select id="ownerShopSelect"></select>
-<input id="editShopName" placeholder="Shop name">
-<input id="editShopPhone" placeholder="Phone number">
-<input id="editShopAddress" placeholder="Shop address">
-<select id="editShopArea">
+<select id="shopArea">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<input id="deliveryCharge" type="number" min="0" placeholder="Delivery charge ₹">
-<input id="shopUpi" placeholder="Your UPI ID">
-<button id="saveShopSettings">Save Shop Settings</button>
-<p id="shopSettingMsg"></p>
+
+<input id="deliveryCharge" type="number" placeholder="Delivery charge">
+<input id="upiId" placeholder="Your UPI ID">
+
+<button onclick="registerShop()">Submit Shop for Approval</button>
+<p id="shopMessage"></p>
 </div>
 
-<div class="card">
-<h2>🍲 Manage Food Menu</h2>
-<input id="foodName" placeholder="Food name">
-<input id="foodPrice" type="number" min="1" placeholder="Price ₹">
-<input id="foodImage" placeholder="Food photo URL (optional)">
-<button id="addFoodBtn">Add Food Item</button>
-<div id="ownerMenu"></div>
+<h2>My Shops</h2>
+<div id="ownerShops"></div>
 </div>
 
-<div class="card">
-<h2>📦 Incoming Orders</h2>
-<div id="ownerOrders"></div>
-</div>
+<div id="adminSection" class="hidden">
 
-</section>
-
-<!-- ADMIN -->
-
-<section id="adminSection" class="hidden">
-
-<div class="card">
 <h2>👑 Admin Dashboard</h2>
-<p>Welcome Admin. You have full control.</p>
-</div>
 
 <div class="card">
-<h2>🏪 All Shop Registrations</h2>
-<div id="adminShops"></div>
-</div>
-
-<div class="card">
-<h2>➕ Add Shop Manually</h2>
+<h3>Add Shop Manually</h3>
 <input id="adminShopName" placeholder="Shop name">
-<input id="adminOwnerEmail" placeholder="Owner email (optional)">
-<input id="adminPhone" placeholder="Phone">
-<input id="adminAddress" placeholder="Address">
-<select id="adminArea">
+<input id="adminShopPhone" placeholder="Phone">
+<input id="adminShopAddress" placeholder="Address">
+
+<select id="adminShopArea">
 <option>Kudasan</option>
 <option>Raysan</option>
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<button id="adminAddShop">Add Approved Shop</button>
+
+<button onclick="adminAddShop()">Add Approved Shop</button>
 </div>
 
-<div class="card">
-<h2>📦 All Orders</h2>
+<h2>Shop Approval & Management</h2>
+<div id="adminShops"></div>
+
+<h2>All Orders</h2>
 <div id="adminOrders"></div>
-</div>
-
-</section>
 
 </div>
 </div>
+</div>
 
-<script type="module">
-
-import {initializeApp}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getAuth,createUserWithEmailAndPassword,
-signInWithEmailAndPassword,signOut,onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-getFirestore,collection,addDoc,getDocs,
-query,where,doc,updateDoc,deleteDoc,
-serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig={
-apiKey:"AIzaSyBmLCgp-lhyVBZ18uIaGs78555o6LcFi8",
-authDomain:"project-2153778259975197488.firebaseapp.com",
-projectId:"project-2153778259975197488",
-storageBucket:"project-2153778259975197488.firebasestorage.app",
-messagingSenderId:"854726959400",
-appId:"1:854726959400:web:fc87228ca991e1a8b4b01d",
-measurementId:"G-S1CFHKMLEY"
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBmLCgp-lhyVBZ18caGs785H55o6LcFi8",
+  authDomain: "project-2153778259975197488.firebaseapp.com",
+  projectId: "project-2153778259975197488",
+  storageBucket: "project-2153778259975197488.firebasestorage.app",
+  messagingSenderId: "854726959400",
+  appId: "1:854726959400:web:fc87228ca991e1a8b4b01d"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+firebase.initializeApp(firebaseConfig);
 
-const ADMIN_UID="SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-const $=id=>document.getElementById(id);
+const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
 
-let shops=[];
-let cart=[];
-let selectedOwnerShop="";
-let editingFood="";
+let currentUser = null;
+let selectedShop = null;
+let cartItems = [];
 
-function admin(){
-return auth.currentUser?.uid===ADMIN_UID;
+function showMessage(id, text) {
+  document.getElementById(id).innerText = text;
 }
 
-function money(n){
-return "₹"+Number(n||0).toFixed(2);
+function login() {
+  const e = document.getElementById("email").value.trim();
+  const p = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(e,p)
+  .catch(err => showMessage("message",err.message));
 }
 
-function safeText(value){
-return String(value??"");
+function register() {
+  const e = document.getElementById("email").value.trim();
+  const p = document.getElementById("password").value;
+
+  auth.createUserWithEmailAndPassword(e,p)
+  .catch(err => showMessage("message",err.message));
 }
 
-function makeId(){
-return Date.now().toString()+"_"+Math.random().toString(36).slice(2,8);
+function logout() {
+  auth.signOut();
 }
 
-// LOGIN
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
 
-$("loginBtn").onclick=async()=>{
-$("authMsg").textContent="Please wait...";
-try{
-await signInWithEmailAndPassword(
-auth,$("email").value.trim(),$("password").value
-);
-}catch(e){
-$("authMsg").textContent=e.message;
-}
-};
+  document.getElementById("loginBox").classList.toggle("hidden",!!user);
+  document.getElementById("app").classList.toggle("hidden",!user);
 
-$("registerBtn").onclick=async()=>{
-$("authMsg").textContent="Creating account...";
-try{
-await createUserWithEmailAndPassword(
-auth,$("email").value.trim(),$("password").value
-);
-}catch(e){
-$("authMsg").textContent=e.message;
-}
-};
+  if(!user) return;
 
-$("logoutBtn").onclick=()=>signOut(auth);
+  document.getElementById("welcome").innerText =
+    "Welcome " + user.email;
 
-onAuthStateChanged(auth,async user=>{
-if(!user){
-$("authSection").classList.remove("hidden");
-$("appSection").classList.add("hidden");
-return;
-}
+  ["customerSection","ownerSection","adminSection"]
+    .forEach(id => document.getElementById(id).classList.add("hidden"));
 
-$("authSection").classList.add("hidden");
-$("appSection").classList.remove("hidden");
-$("userEmail").textContent=user.email||"";
-
-if(admin()){
-$("userRole").textContent="ADMIN";
-$("customerSection").classList.add("hidden");
-$("shopSection").classList.add("hidden");
-$("adminSection").classList.remove("hidden");
-}else{
-$("userRole").textContent="CUSTOMER / SHOP OWNER";
-$("customerSection").classList.remove("hidden");
-$("shopSection").classList.remove("hidden");
-$("adminSection").classList.add("hidden");
-}
-
-await refreshAll();
+  if(user.uid === ADMIN_UID) {
+    document.getElementById("adminSection").classList.remove("hidden");
+    loadAdmin();
+  } else {
+    document.getElementById("customerSection").classList.remove("hidden");
+    document.getElementById("ownerSection").classList.remove("hidden");
+    loadShops();
+    loadMyOrders();
+    loadOwnerShops();
+  }
 });
 
-// LOAD DATA
+async function loadShops() {
+  const list = document.getElementById("shopList");
+  list.innerHTML = "Loading shops...";
 
-async function refreshAll(){
-await loadShops();
-await loadCustomerOrders();
+  try {
+    const snap = await db.collection("shops").get();
+    const area = document.getElementById("area").value;
 
-if(admin()){
-await loadAdmin();
-}else{
-await loadOwnerShops();
-}
-}
+    list.innerHTML = "";
 
-async function loadShops(){
+    snap.forEach(doc => {
+      const s = doc.data();
 
-$("shopList").textContent="Loading shops...";
+      if(s.approved !== true || s.active === false) return;
+      if(area && s.area !== area) return;
 
-try{
+      const div = document.createElement("div");
+      div.className = "card";
 
-const snap=await getDocs(query(
-collection(db,"shops"),
-where("approved","==",true),
-where("active","==",true)
-));
+      const title = document.createElement("h3");
+      title.innerText = s.name || "Shop";
+      div.appendChild(title);
 
-shops=snap.docs.map(d=>({id:d.id,...d.data()}));
+      const address = document.createElement("p");
+      address.innerText = s.area || "";
+      div.appendChild(address);
 
-renderShops();
+      const button = document.createElement("button");
+      button.innerText = "View Menu";
+      button.onclick = () => showMenu(doc.id,s);
+      div.appendChild(button);
 
-}catch(e){
-$("shopList").textContent="Error: "+e.message;
-}
-}
+      list.appendChild(div);
+    });
 
-// CUSTOMER SHOP LIST
+    if(!list.innerHTML) list.innerText = "No approved shops found yet.";
 
-$("areaFilter").onchange=renderShops;
-
-function renderShops(){
-
-const list=$("shopList");
-list.innerHTML="";
-
-const area=$("areaFilter").value;
-
-const available=shops.filter(s=>!area||s.area===area);
-
-if(!available.length){
-list.textContent="No shops available in this area.";
-return;
+  } catch(e) {
+    list.innerText = e.message;
+  }
 }
 
-available.forEach(shop=>{
+function showMenu(id,shop) {
+  selectedShop = {id,...shop};
 
-const card=document.createElement("div");
-card.className="card";
+  const list = document.getElementById("shopList");
+  list.innerHTML = "<h3>"+escapeHTML(shop.name)+" Menu</h3>";
 
-const title=document.createElement("h2");
-title.textContent="🏪 "+shop.name;
+  (shop.menu || []).forEach(food => {
+    if(food.available === false) return;
 
-const details=document.createElement("p");
-details.textContent=
-(shop.area||"")+" | "+
-(shop.address||"")+" | "+
-(shop.phone||"");
+    const div = document.createElement("div");
+    div.className = "card";
 
-const delivery=document.createElement("p");
-delivery.textContent="Delivery: "+
-(Number(shop.deliveryCharge||0)===0?"FREE":money(shop.deliveryCharge));
+    const title = document.createElement("h3");
+    title.innerText = food.name;
+    div.appendChild(title);
 
-card.append(title,details,delivery);
+    const price = document.createElement("p");
+    price.className = "price";
+    price.innerText = "₹" + food.price;
+    div.appendChild(price);
 
-const menu=shop.menu||[];
+    const button = document.createElement("button");
+    button.innerText = "Add to Cart";
+    button.onclick = () => addToCart(food);
+    div.appendChild(button);
 
-if(!menu.length){
-const p=document.createElement("p");
-p.textContent="Menu coming soon.";
-card.appendChild(p);
+    list.appendChild(div);
+  });
+
+  const back = document.createElement("button");
+  back.className = "secondary";
+  back.innerText = "Back to Shops";
+  back.onclick = loadShops;
+  list.appendChild(back);
 }
 
-menu.forEach(food=>{
+function addToCart(food) {
+  if(!selectedShop) return alert("Select a shop first.");
 
-if(food.available===false)return;
+  const existing = cartItems.find(x => x.id === food.id);
 
-const item=document.createElement("div");
-item.className="food";
+  if(existing) existing.quantity++;
+  else cartItems.push({...food,quantity:1});
 
-if(food.image){
-const img=document.createElement("img");
-img.src=food.image;
-img.alt=food.name;
-img.onerror=()=>img.style.display="none";
-item.appendChild(img);
+  displayCart();
 }
 
-const name=document.createElement("h3");
-name.textContent=food.name;
+function displayCart() {
+  const div = document.getElementById("cart");
+  div.innerHTML = "";
 
-const price=document.createElement("p");
-price.className="price";
-price.textContent=money(food.price);
+  let subtotal = 0;
 
-const add=document.createElement("button");
-add.className="green";
-add.textContent="🛒 ADD TO CART";
+  cartItems.forEach(item => {
+    subtotal += Number(item.price) * item.quantity;
 
-add.onclick=()=>addToCart(shop,food);
+    const row = document.createElement("p");
+    row.innerText =
+      item.name + " x " + item.quantity + " = ₹" +
+      (item.price * item.quantity);
 
-item.append(name,price,add);
-card.appendChild(item);
+    div.appendChild(row);
+  });
 
-});
-
-list.appendChild(card);
-
-});
+  const total = document.createElement("h3");
+  total.innerText = "Food total: ₹" + subtotal;
+  div.appendChild(total);
 }
 
-// CART
+async function placeOrder() {
+  if(!selectedShop || cartItems.length === 0)
+    return alert("Please select food and add it to cart.");
 
-function addToCart(shop,food){
+  const address = document.getElementById("deliveryAddress").value.trim();
 
-if(cart.length&&cart[0].shopId!==shop.id){
-if(!confirm("Your cart has another shop's items. Clear cart and add this item?"))return;
-cart=[];
+  if(!address) return alert("Please enter delivery address.");
+
+  const subtotal = cartItems.reduce(
+    (sum,item) => sum + Number(item.price)*item.quantity,0
+  );
+
+  const charge = Number(selectedShop.deliveryCharge || 0);
+  const payment = document.getElementById("payment").value;
+
+  const order = {
+    customerId: currentUser.uid,
+    shopId: selectedShop.id,
+    shopName: selectedShop.name,
+    items: cartItems.map(item => ({
+      foodId: item.id,
+      name: item.name,
+      price: Number(item.price),
+      quantity: item.quantity
+    })),
+    subtotal: subtotal,
+    deliveryCharge: charge,
+    total: subtotal + charge,
+    address: address,
+    paymentMethod: payment,
+    paymentStatus: payment === "COD" ? "Pending" : "Pending Verification",
+    status: "New",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    const ref = await db.collection("orders").add(order);
+
+    alert("Order placed successfully! Order ID: " + ref.id);
+
+    cartItems = [];
+    selectedShop = null;
+    displayCart();
+    loadShops();
+    loadMyOrders();
+
+    if(payment === "UPI") {
+      if(!selectedShop?.upiId) {
+        alert("Contact the shopkeeper for UPI payment details. Payment is not verified automatically.");
+      } else {
+        alert("Order saved. Please contact the shopkeeper for UPI payment instructions. Payment is not verified automatically.");
+      }
+    }
+
+  } catch(e) {
+    alert("Order error: " + e.message);
+  }
 }
 
-let item=cart.find(x=>x.foodId===food.id);
+async function loadMyOrders() {
+  const div = document.getElementById("myOrders");
+  div.innerHTML = "Loading...";
 
-if(item){
-item.quantity++;
-}else{
-cart.push({
-shopId:shop.id,
-shopName:shop.name,
-foodId:food.id,
-name:food.name,
-price:Number(food.price),
-quantity:1,
-deliveryCharge:Number(shop.deliveryCharge||0),
-upiId:shop.upiId||""
-});
+  try {
+    const snap = await db.collection("orders")
+      .where("customerId","==",currentUser.uid).get();
+
+    div.innerHTML = "";
+
+    snap.forEach(doc => {
+      const o = doc.data();
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const title = document.createElement("h3");
+      title.innerText = o.shopName;
+      card.appendChild(title);
+
+      const details = document.createElement("p");
+      details.innerText =
+        "Total: ₹" + o.total + " | Status: " + o.status +
+        " | Payment: " + o.paymentMethod;
+      card.appendChild(details);
+
+      div.appendChild(card);
+    });
+
+    if(snap.empty) div.innerText = "No orders yet.";
+
+  } catch(e) {
+    div.innerText = e.message;
+  }
 }
 
-renderCart();
-alert(food.name+" added to cart!");
+async function registerShop() {
+  const name = document.getElementById("shopName").value.trim();
+  const phone = document.getElementById("shopPhone").value.trim();
+  const address = document.getElementById("shopAddress").value.trim();
+  const area = document.getElementById("shopArea").value;
+
+  if(!name || !phone || !address)
+    return alert("Please enter shop name, phone and address.");
+
+  try {
+    await db.collection("shops").add({
+      name,
+      phone,
+      address,
+      area,
+      ownerId: currentUser.uid,
+      ownerEmail: currentUser.email,
+      approved: false,
+      active: false,
+      menu: [],
+      deliveryCharge: Number(document.getElementById("deliveryCharge").value || 0),
+      upiId: document.getElementById("upiId").value.trim(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showMessage("shopMessage","Registration submitted. Waiting for admin approval.");
+    loadOwnerShops();
+
+  } catch(e) {
+    showMessage("shopMessage","Error: " + e.message);
+  }
 }
 
-function renderCart(){
+async function loadOwnerShops() {
+  const div = document.getElementById("ownerShops");
+  div.innerHTML = "";
 
-const list=$("cartList");
-list.innerHTML="";
+  try {
+    const snap = await db.collection("shops")
+      .where("ownerId","==",currentUser.uid).get();
 
-if(!cart.length){
-list.textContent="Your cart is empty.";
-$("cartTotal").textContent="Total: ₹0";
-return;
+    snap.forEach(doc => {
+      const s = doc.data();
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const title = document.createElement("h3");
+      title.innerText = s.name;
+      card.appendChild(title);
+
+      const status = document.createElement("p");
+      status.innerText = s.approved ? "Approved" : "Waiting for approval";
+      card.appendChild(status);
+
+      div.appendChild(card);
+    });
+
+  } catch(e) {
+    div.innerText = e.message;
+  }
 }
 
-let subtotal=0;
-
-cart.forEach((item,index)=>{
-
-subtotal+=item.price*item.quantity;
-
-const div=document.createElement("div");
-div.className="item";
-
-const name=document.createElement("p");
-name.textContent=item.name+" — "+money(item.price);
-
-const qty=document.createElement("p");
-qty.textContent="Quantity: "+item.quantity;
-
-const row=document.createElement("div");
-row.className="row";
-
-const minus=document.createElement("button");
-minus.textContent="−";
-minus.onclick=()=>{
-item.quantity--;
-if(item.quantity<=0)cart.splice(index,1);
-renderCart();
-};
-
-const plus=document.createElement("button");
-plus.textContent="+";
-plus.onclick=()=>{
-item.quantity++;
-renderCart();
-};
-
-const remove=document.createElement("button");
-remove.textContent="Remove";
-remove.className="red";
-remove.onclick=()=>{
-cart.splice(index,1);
-renderCart();
-};
-
-row.append(minus,plus,remove);
-div.append(name,qty,row);
-list.appendChild(div);
-
-});
-
-const delivery=cart[0].deliveryCharge;
-
-$("cartTotal").textContent=
-"Food: "+money(subtotal)+
-" | Delivery: "+money(delivery)+
-" | Total: "+money(subtotal+delivery);
-
+async function loadAdmin() {
+  loadAdminShops();
+  loadAdminOrders();
 }
 
-// CHECKOUT
+async function loadAdminShops() {
+  const div = document.getElementById("adminShops");
+  div.innerHTML = "Loading...";
 
-$("checkoutBtn").onclick=async()=>{
+  try {
+    const snap = await db.collection("shops").get();
+    div.innerHTML = "";
 
-if(!cart.length){
-alert("Your cart is empty.");
-return;
+    snap.forEach(doc => {
+      const s = doc.data();
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const title = document.createElement("h3");
+      title.innerText = s.name;
+      card.appendChild(title);
+
+      const info = document.createElement("p");
+      info.innerText = s.area + " | " + s.phone +
+        " | " + (s.approved ? "Approved" : "Pending");
+      card.appendChild(info);
+
+      const approve = document.createElement("button");
+      approve.innerText = s.approved ? "Approved" : "Approve Shop";
+      approve.onclick = () => updateShop(doc.id,{approved:true,active:true});
+      card.appendChild(approve);
+
+      const deactivate = document.createElement("button");
+      deactivate.className = "secondary";
+      deactivate.innerText = s.active === false ? "Activate Shop" : "Deactivate Shop";
+      deactivate.onclick = () => updateShop(doc.id,{active:s.active === false});
+      card.appendChild(deactivate);
+
+      const remove = document.createElement("button");
+      remove.style.background = "#b00020";
+      remove.innerText = "Delete Shop";
+      remove.onclick = () => {
+        if(confirm("Delete this shop?"))
+          db.collection("shops").doc(doc.id).delete().then(loadAdminShops);
+      };
+      card.appendChild(remove);
+
+      div.appendChild(card);
+    });
+
+    if(snap.empty) div.innerText = "No shops registered yet.";
+
+  } catch(e) {
+    div.innerText = e.message;
+  }
 }
 
-const address=prompt("Enter your complete delivery address:");
-
-if(!address||!address.trim())return;
-
-const payment=prompt(
-"Choose payment method:\n1 = Cash on Delivery\n2 = UPI"
-);
-
-if(payment!=="1"&&payment!=="2")return;
-
-const item=cart[0];
-
-const subtotal=cart.reduce(
-(sum,x)=>sum+x.price*x.quantity,0
-);
-
-const delivery=item.deliveryCharge;
-const total=subtotal+delivery;
-
-let paymentStatus="Pending";
-
-if(payment==="2"){
-
-if(!item.upiId){
-alert("This shop has not added a UPI ID. Please choose COD.");
-return;
+async function updateShop(id,changes) {
+  try {
+    await db.collection("shops").doc(id).update(changes);
+    loadAdminShops();
+  } catch(e) {
+    alert(e.message);
+  }
 }
 
-const upiUrl=
-"upi://pay?pa="+encodeURIComponent(item.upiId)+
-"&pn="+encodeURIComponent(item.shopName)+
-"&am="+total+
-"&cu=INR"+
-"&tn="+encodeURIComponent("Breakfast Express Order");
+async function adminAddShop() {
+  const name = document.getElementById("adminShopName").value.trim();
+  const phone = document.getElementById("adminShopPhone").value.trim();
+  const address = document.getElementById("adminShopAddress").value.trim();
 
-window.location.href=upiUrl;
+  if(!name || !phone || !address)
+    return alert("Enter shop details.");
 
-paymentStatus="Customer says UPI payment initiated";
+  try {
+    await db.collection("shops").add({
+      name,
+      phone,
+      address,
+      area: document.getElementById("adminShopArea").value,
+      ownerId: ADMIN_UID,
+      ownerEmail: currentUser.email,
+      approved: true,
+      active: true,
+      menu: [],
+      deliveryCharge: 0,
+      upiId: "",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
+    alert("Shop added successfully.");
+    loadAdminShops();
+
+  } catch(e) {
+    alert("Error: " + e.message);
+  }
 }
 
-try{
+async function loadAdminOrders() {
+  const div = document.getElementById("adminOrders");
+  div.innerHTML = "Loading...";
 
-await addDoc(collection(db,"orders"),{
+  try {
+    const snap = await db.collection("orders").get();
+    div.innerHTML = "";
 
-customerId:auth.currentUser.uid,
-shopId:item.shopId,
-shopName:item.shopName,
+    snap.forEach(doc => {
+      const o = doc.data();
+      const card = document.createElement("div");
+      card.className = "card";
 
-items:cart.map(x=>({
-foodId:x.foodId,
-name:x.name,
-price:x.price,
-quantity:x.quantity
-})),
+      const title = document.createElement("h3");
+      title.innerText = o.shopName;
+      card.appendChild(title);
 
-subtotal:subtotal,
-deliveryCharge:delivery,
-total:total,
-address:address.trim(),
+      const details = document.createElement("p");
+      details.innerText =
+        "Total ₹" + o.total + " | " + o.status +
+        " | " + o.paymentMethod;
+      card.appendChild(details);
 
-paymentMethod:payment==="1"?"COD":"UPI",
-paymentStatus:paymentStatus,
+      const status = document.createElement("select");
 
-status:"New",
-createdAt:serverTimestamp()
+      ["New","Accepted","Preparing","Ready","Out for Delivery","Delivered","Cancelled"]
+      .forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.innerText = value;
+        option.selected = o.status === value;
+        status.appendChild(option);
+      });
 
-});
+      status.onchange = () => {
+        db.collection("orders").doc(doc.id)
+          .update({status:status.value})
+          .catch(e => alert(e.message));
+      };
 
-alert("Order placed successfully! Total: "+money(total));
+      card.appendChild(status);
+      div.appendChild(card);
+    });
 
-cart=[];
-renderCart();
-await refreshAll();
+    if(snap.empty) div.innerText = "No orders yet.";
 
-}catch(e){
-alert("Order error: "+e.message);
+  } catch(e) {
+    div.innerText = e.message;
+  }
 }
 
-};
-
-// CUSTOMER ORDERS
-
-async function loadCustomerOrders(){
-
-const list=$("customerOrders");
-list.textContent="Loading...";
-
-try{
-
-const snap=await getDocs(query(
-collection(db,"orders"),
-where("customerId","==",auth.currentUser.uid)
-));
-
-list.innerHTML="";
-
-if(snap.empty){
-list.textContent="No orders yet.";
-return;
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
 }
-
-snap.forEach(d=>{
-
-const o=d.data();
-const div=document.createElement("div");
-div.className="item";
-
-const food=Array.isArray(o.items)?
-o.items.map(x=>x.name+" x "+x.quantity).join(", "):
-safeText(o.items);
-
-div.textContent=
-(o.shopName||"Shop")+" | "+
-food+" | "+
-money(o.total)+" | "+
-(o.paymentMethod||"")+" | "+
-(o.status||"New");
-
-list.appendChild(div);
-
-});
-
-}catch(e){
-list.textContent=e.message;
-}
-
-}
-
-// SHOPKEEPER SHOPS
-
-async function loadOwnerShops(){
-
-try{
-
-const snap=await getDocs(collection(db,"shops"));
-
-const own=snap.docs
-.map(d=>({id:d.id,...d.data()}))
-.filter(s=>s.ownerId===auth.currentUser.uid);
-
-const select=$("ownerShopSelect");
-select.innerHTML="";
-
-$("ownerShopInfo").textContent=
-own.length?"Your registered shops: "+own.length:
-"No shop registered yet. Register your shop through the admin.";
-
-own.forEach(s=>{
-
-const option=document.createElement("option");
-option.value=s.id;
-option.textContent=s.name+
-(s.approved?" (Approved)":" (Pending)");
-
-select.appendChild(option);
-
-});
-
-if(own.length){
-selectedOwnerShop=own[0].id;
-select.value=selectedOwnerShop;
-loadOwnerShopDetails();
-loadOwnerOrders();
-}
-
-}catch(e){
-$("ownerShopInfo").textContent=e.message;
-}
-
-}
-
-$("ownerShopSelect").onchange=()=>{
-selectedOwnerShop=$("ownerShopSelect").value;
-loadOwnerShopDetails();
-loadOwnerOrders();
-};
-
-function ownerShop(){
-return shops.find(s=>s.id===selectedOwnerShop);
-}
-
-async function loadOwnerShopDetails(){
-
-if(!selectedOwnerShop)return;
-
-try{
-
-const snap=await getDocs(collection(db,"shops"));
-const d=snap.docs.find(x=>x.id===selectedOwnerShop);
-
-if(!d)return;
-
-const s=d.data();
-
-$("editShopName").value=s.name||"";
-$("editShopPhone").value=s.phone||"";
-$("editShopAddress").value=s.address||"";
-$("editShopArea").value=s.area||"Kudasan";
-$("deliveryCharge").value=s.deliveryCharge||0;
-$("shopUpi").value=s.upiId||"";
-
-renderOwnerMenu(s.menu||[]);
-
-}catch(e){
-$("shopSettingMsg").textContent=e.message;
-}
-
-}
-
-// SAVE SHOP SETTINGS
-
-$("saveShopSettings").onclick=async()=>{
-
-if(!selectedOwnerShop)return;
-
-try{
-
-await updateDoc(doc(db,"shops",selectedOwnerShop),{
-
-name:$("editShopName").value.trim(),
-phone:$("editShopPhone").value.trim(),
-address:$("editShopAddress").value.trim(),
-area:$("editShopArea").value,
-deliveryCharge:Number($("deliveryCharge").value||0),
-upiId:$("shopUpi").value.trim()
-
-});
-
-$("shopSettingMsg").textContent="Settings saved!";
-await loadShops();
-
-}catch(e){
-$("shopSettingMsg").textContent=e.message;
-}
-
-};
-
-// FOOD MENU
-
-$("addFoodBtn").onclick=async()=>{
-
-if(!selectedOwnerShop){
-alert("No shop selected.");
-return;
-}
-
-const name=$("foodName").value.trim();
-const price=Number($("foodPrice").value);
-const image=$("foodImage").value.trim();
-
-if(!name||price<=0){
-alert("Enter food name and valid price.");
-return;
-}
-
-try{
-
-const snap=await getDocs(collection(db,"shops"));
-const d=snap.docs.find(x=>x.id===selectedOwnerShop);
-
-if(!d)return;
-
-let menu=d.data().menu||[];
-
-if(editingFood){
-menu=menu.map(f=>f.id===editingFood?
-{...f,name,price,image}:f);
-}else{
-menu.push({
-id:makeId(),
-name,
-price,
-image,
-available:true
-});
-}
-
-await updateDoc(doc(db,"shops",selectedOwnerShop),{menu});
-
-editingFood="";
-
-$("foodName").value="";
-$("foodPrice").value="";
-$("foodImage").value="";
-
-await loadOwnerShopDetails();
-await loadShops();
-
-alert("Menu saved successfully!");
-
-}catch(e){
-alert("Menu error: "+e.message);
-}
-
-};
-
-function renderOwnerMenu(menu){
-
-const list=$("ownerMenu");
-list.innerHTML="";
-
-menu.forEach(food=>{
-
-const div=document.createElement("div");
-div.className="item";
-
-const p=document.createElement("p");
-p.textContent=food.name+" — "+money(food.price)+
-(food.available===false?" (Unavailable)":"");
-
-const edit=document.createElement("button");
-edit.textContent="Edit";
-edit.onclick=()=>{
-editingFood=food.id;
-$("foodName").value=food.name;
-$("foodPrice").value=food.price;
-$("foodImage").value=food.image||"";
-};
-
-const toggle=document.createElement("button");
-toggle.className="dark";
-toggle.textContent=food.available===false?
-"Make Available":"Make Unavailable";
-
-toggle.onclick=()=>changeFood(food.id,{
-available:food.available===false
-});
-
-const del=document.createElement("button");
-del.className="red";
-del.textContent="Delete";
-del.onclick=()=>removeFood(food.id);
-
-div.append(p,edit,toggle,del);
-list.appendChild(div);
-
-});
-
-}
-
-async function changeFood(id,changes){
-
-try{
-
-const snap=await getDocs(collection(db,"shops"));
-const d=snap.docs.find(x=>x.id===selectedOwnerShop);
-if(!d)return;
-
-const menu=(d.data().menu||[]).map(f=>
-f.id===id?{...f,...changes}:f
-);
-
-await updateDoc(doc(db,"shops",selectedOwnerShop),{menu});
-
-await loadOwnerShopDetails();
-await loadShops();
-
-}catch(e){
-alert(e.message);
-}
-
-}
-
-async function removeFood(id){
-
-if(!confirm("Delete this food item?"))return;
-
-try{
-
-const snap=await getDocs(collection(db,"shops"));
-const d=snap.docs.find(x=>x.id===selectedOwnerShop);
-if(!d)return;
-
-const menu=(d.data().menu||[]).filter(f=>f.id!==id);
-
-await updateDoc(doc(db,"shops",selectedOwnerShop),{menu});
-
-await loadOwnerShopDetails();
-await loadShops();
-
-}catch(e){
-alert(e.message);
-}
-
-}
-
-// SHOPKEEPER ORDERS
-
-async function loadOwnerOrders(){
-
-const list=$("ownerOrders");
-list.textContent="Loading orders...";
-
-try{
-
-const snap=await getDocs(query(
-collection(db,"orders"),
-where("shopId","==",selectedOwnerShop)
-));
-
-list.innerHTML="";
-
-if(snap.empty){
-list.textContent="No orders received.";
-return;
-}
-
-snap.forEach(d=>{
-
-const o=d.data();
-const div=document.createElement("div");
-div.className="item";
-
-const items=Array.isArray(o.items)?
-o.items.map(x=>x.name+" x "+x.quantity).join(", "):
-safeText(o.items);
-
-const info=document.createElement("p");
-info.textContent=
-items+" | "+money(o.total)+
-" | "+o.address+
-" | "+o.paymentMethod+
-" | "+o.status;
-
-div.appendChild(info);
-
-const status=document.createElement("select");
-
-["New","Accepted","Preparing","Ready","Out for Delivery","Completed","Cancelled"]
-.forEach(x=>{
-const option=document.createElement("option");
-option.value=x;
-option.textContent=x;
-status.appendChild(option);
-});
-
-status.value=o.status||"New";
-
-const btn=document.createElement("button");
-btn.textContent="Update Order Status";
-
-btn.onclick=async()=>{
-try{
-await updateDoc(doc(db,"orders",d.id),{
-status:status.value
-});
-alert("Order updated.");
-await loadOwnerOrders();
-}catch(e){
-alert(e.message);
-}
-};
-
-div.append(status,btn);
-list.appendChild(div);
-
-});
-
-}catch(e){
-list.textContent="Order access error: "+e.message;
-}
-
-}
-
-// ADMIN
-
-async function loadAdmin(){
-
-try{
-
-const snap=await getDocs(collection(db,"shops"));
-
-shops=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-const list=$("adminShops");
-list.innerHTML="";
-
-shops.forEach(s=>{
-
-const div=document.createElement("div");
-div.className="item";
-
-const p=document.createElement("p");
-
-p.textContent=s.name+" | "+s.area+
-" | "+(s.approved?"Approved":"Pending");
-
-const approve=document.createElement("button");
-approve.textContent=s.approved?"Approved":"Approve Shop";
-approve.className="green";
-approve.onclick=()=>approveShop(s.id);
-
-const active=document.createElement("button");
-active.textContent=s.active===false?"Activate Shop":"Deactivate Shop";
-active.className="dark";
-active.onclick=()=>toggleShop(s.id,s.active!==false);
-
-const remove=document.createElement("button");
-remove.textContent="Delete Shop";
-remove.className="red";
-remove.onclick=()=>deleteShop(s.id);
-
-div.append(p,approve,active,remove);
-list.appendChild(div);
-
-});
-
-await loadAdminOrders();
-
-}catch(e){
-$("adminShops").textContent=e.message;
-}
-
-}
-
-async function approveShop(id){
-
-try{
-await updateDoc(doc(db,"shops",id),{approved:true});
-await refreshAll();
-alert("Shop approved!");
-}catch(e){
-alert(e.message);
-}
-
-}
-
-async function toggleShop(id,active){
-
-try{
-await updateDoc(doc(db,"shops",id),{active:!active});
-await refreshAll();
-}catch(e){
-alert(e.message);
-}
-
-}
-
-async function deleteShop(id){
-
-if(!confirm("Delete this shop?"))return;
-
-try{
-await deleteDoc(doc(db,"shops",id));
-await refreshAll();
-}catch(e){
-alert(e.message);
-}
-
-}
-
-// ADMIN ADD SHOP
-
-$("adminAddShop").onclick=async()=>{
-
-if(!admin())return;
-
-const name=$("adminShopName").value.trim();
-
-if(!name){
-alert("Enter shop name.");
-return;
-}
-
-try{
-
-await addDoc(collection(db,"shops"),{
-
-name,
-ownerEmail:$("adminOwnerEmail").value.trim(),
-phone:$("adminPhone").value.trim(),
-address:$("adminAddress").value.trim(),
-area:$("adminArea").value,
-
-ownerId:ADMIN_UID,
-approved:true,
-active:true,
-
-menu:[],
-deliveryCharge:0,
-upiId:"",
-
-createdAt:serverTimestamp()
-
-});
-
-alert("Shop added!");
-
-$("adminShopName").value="";
-$("adminOwnerEmail").value="";
-$("adminPhone").value="";
-$("adminAddress").value="";
-
-await refreshAll();
-
-}catch(e){
-alert(e.message);
-}
-
-};
-
-// ADMIN ORDERS
-
-async function loadAdminOrders(){
-
-const list=$("adminOrders");
-list.textContent="Loading orders...";
-
-try{
-
-const snap=await getDocs(collection(db,"orders"));
-
-list.innerHTML="";
-
-if(snap.empty){
-list.textContent="No orders yet.";
-return;
-}
-
-snap.forEach(d=>{
-
-const o=d.data();
-const div=document.createElement("div");
-div.className="item";
-
-const items=Array.isArray(o.items)?
-o.items.map(x=>x.name+" x "+x.quantity).join(", "):
-safeText(o.items);
-
-const p=document.createElement("p");
-
-p.textContent=
-(o.shopName||"")+" | "+items+
-" | "+money(o.total)+
-" | "+o.address+
-" | "+o.paymentMethod+
-" | "+o.status;
-
-div.appendChild(p);
-
-const status=document.createElement("select");
-
-["New","Accepted","Preparing","Ready","Out for Delivery","Completed","Cancelled"]
-.forEach(x=>{
-const op=document.createElement("option");
-op.value=x;
-op.textContent=x;
-status.appendChild(op);
-});
-
-status.value=o.status||"New";
-
-const btn=document.createElement("button");
-btn.textContent="Update Status";
-
-btn.onclick=async()=>{
-try{
-await updateDoc(doc(db,"orders",d.id),{
-status:status.value
-});
-await loadAdminOrders();
-}catch(e){
-alert(e.message);
-}
-};
-
-div.append(status,btn);
-list.appendChild(div);
-
-});
-
-}catch(e){
-list.textContent=e.message;
-}
-
-}
-
 </script>
 
 </body>
