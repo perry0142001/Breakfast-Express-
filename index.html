@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,43 +7,33 @@
 *{box-sizing:border-box}
 body{font-family:Arial;margin:0;background:#fff8ed;color:#333}
 header{background:#e87516;color:white;padding:18px;text-align:center}
-.container{max-width:700px;margin:auto;padding:12px}
+.container{max-width:750px;margin:auto;padding:12px}
 .card{background:white;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 2px 7px #ddd}
 input,select,button{width:100%;padding:12px;margin:7px 0;border:1px solid #ccc;border-radius:7px;font-size:16px}
 button{background:#e87516;color:white;border:0;font-weight:bold}
 .secondary{background:#444}
+.danger{background:#b83232}
 .hidden{display:none!important}
 h2{color:#d96712}
 .item{padding:12px 0;border-bottom:1px solid #ddd}
+.small{font-size:13px;color:#666}
 </style>
 </head>
-<body>
-
-<header>
+<body><header>
 <h1>🍽️ Breakfast Express</h1>
 <p>તમારો નાસ્તો, હવે તમારા ઘરે!</p>
-</header>
-
-<div class="container">
-
-<div class="card" id="authSection">
+</header><div class="container"><div class="card" id="authSection">
 <h2>Login / Register</h2>
 <input id="emailInput" type="email" placeholder="Email address">
 <input id="passwordInput" type="password" placeholder="Password">
 <button id="loginButton">Login</button>
 <button id="registerButton">Create Account</button>
 <p id="authMessage"></p>
-</div>
-
-<div id="appSection" class="hidden">
-
-<div class="card">
-<h2>Welcome to Breakfast Express!</h2>
+</div><div id="appSection" class="hidden"><div class="card">
+<h2>Welcome!</h2>
 <p id="userEmail"></p>
 <button id="logoutButton" class="secondary">Logout</button>
-</div>
-
-<div class="card">
+</div><div class="card">
 <h2>Register Your Shop</h2>
 <input id="shopNameInput" placeholder="Shop name">
 <input id="ownerNameInput" placeholder="Owner name">
@@ -56,26 +45,27 @@ h2{color:#d96712}
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<button id="shopRegisterButton">Submit for Approval</button>
+<button id="shopRegisterButton">Submit Shop for Approval</button>
 <p id="shopMessage"></p>
-</div>
-
-<div class="card">
-<h2>Available Shops</h2>
-<div id="shopsList">Loading...</div>
-</div>
-
-<div class="card">
-<h2>My Orders</h2>
+</div><div class="card">
+<h2>🍴 Available Shops</h2>
+<div id="shopsList">Loading shops...</div>
+</div><div class="card">
+<h2>🧾 My Orders</h2>
 <div id="myOrdersList"></div>
-</div>
-
-<div class="card hidden" id="adminPanel">
-<h2>👑 Admin Dashboard</h2>
-<h3>Shop Registrations</h3>
-<div id="adminShopsList"></div>
-
-<h3>Add Shop Manually</h3>
+</div><div class="card" id="menuManager">
+<h2>🍲 Manage Food Menu</h2>
+<p class="small">Select a shop you own. Admin can select any shop.</p>
+<select id="manageShopSelect">
+<option value="">Select shop</option>
+</select><input id="foodNameInput" placeholder="Food item name">
+<input id="foodPriceInput" type="number" min="1" placeholder="Price in ₹">
+<button id="saveFoodButton">Add Food Item</button>
+<p id="menuMessage"></p>
+<div id="manageMenuList"></div>
+</div><div class="card hidden" id="adminPanel">
+<h2>👑 Admin Dashboard</h2><h3>Shop Registrations</h3>
+<div id="adminShopsList"></div><h3>Add Shop Manually</h3>
 <input id="newShopName" placeholder="Shop name">
 <input id="newShopPhone" placeholder="Phone">
 <input id="newShopAddress" placeholder="Address">
@@ -85,16 +75,11 @@ h2{color:#d96712}
 <option>Sargasan</option>
 <option>PDPU</option>
 </select>
-<button id="addShopButton">Add Approved Shop</button>
-
-<h3>All Orders</h3>
+<button id="addShopButton">Add Approved Shop</button><h3>All Orders</h3>
 <div id="adminOrdersList"></div>
-</div>
+</div></div>
+</div><script type="module">
 
-</div>
-</div>
-
-<script type="module">
 import {initializeApp}
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
@@ -123,335 +108,473 @@ measurementId:"G-S1CFHKMLEY"
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
-
 const ADMIN_UID = "SdcB4AZJ9bhNgroY7vXH7a7MN0H2";
 
-function showApp(user) {
-  el("authSection").classList.add("hidden");
-  el("appSection").classList.remove("hidden");
-  el("userEmail").textContent = user.email || "";
+let currentShops = [];
+let selectedShopId = "";
+let editingFoodId = "";
 
-  const isAdmin = user.uid === ADMIN_UID;
-  el("adminPanel").classList.toggle("hidden", !isAdmin);
-
-  loadShops();
-  loadMyOrders();
-
-  if (isAdmin) loadAdmin();
+function isAdmin(){
+return auth.currentUser?.uid === ADMIN_UID;
 }
 
-function showLogin() {
-  el("authSection").classList.remove("hidden");
-  el("appSection").classList.add("hidden");
-  el("adminPanel").classList.add("hidden");
+function showApp(user){
+el("authSection").classList.add("hidden");
+el("appSection").classList.remove("hidden");
+el("userEmail").textContent = user.email || "";
+el("adminPanel").classList.toggle("hidden",!isAdmin());
+
+loadShops();
+loadMyOrders();
+loadManageShops();
+
+if(isAdmin()) loadAdmin();
 }
 
-el("loginButton").onclick = async () => {
-  const email = el("emailInput").value.trim();
-  const password = el("passwordInput").value;
+function showLogin(){
+el("authSection").classList.remove("hidden");
+el("appSection").classList.add("hidden");
+}
 
-  el("authMessage").textContent = "Please wait...";
-
-  try {
-    const result = await signInWithEmailAndPassword(auth,email,password);
-    showApp(result.user);
-    el("authMessage").textContent = "Login successful!";
-  } catch(error) {
-    el("authMessage").textContent = error.message;
-  }
+el("loginButton").onclick = async()=>{
+el("authMessage").textContent="Please wait...";
+try{
+const result=await signInWithEmailAndPassword(
+auth,el("emailInput").value.trim(),el("passwordInput").value
+);
+showApp(result.user);
+el("authMessage").textContent="Login successful!";
+}catch(e){
+el("authMessage").textContent=e.message;
+}
 };
 
-el("registerButton").onclick = async () => {
-  try {
-    const result = await createUserWithEmailAndPassword(
-      auth,
-      el("emailInput").value.trim(),
-      el("passwordInput").value
-    );
-    showApp(result.user);
-    el("authMessage").textContent = "Account created!";
-  } catch(error) {
-    el("authMessage").textContent = error.message;
-  }
+el("registerButton").onclick=async()=>{
+el("authMessage").textContent="Please wait...";
+try{
+const result=await createUserWithEmailAndPassword(
+auth,el("emailInput").value.trim(),el("passwordInput").value
+);
+showApp(result.user);
+}catch(e){
+el("authMessage").textContent=e.message;
+}
 };
 
-el("logoutButton").onclick = async () => {
-  await signOut(auth);
-  showLogin();
+el("logoutButton").onclick=async()=>{
+await signOut(auth);
+showLogin();
 };
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    showApp(user);
-  } else {
-    showLogin();
-  }
+onAuthStateChanged(auth,user=>{
+if(user) showApp(user);
+else showLogin();
 });
 
-async function loadShops() {
-  el("shopsList").textContent = "Loading shops...";
+async function loadShops(){
+el("shopsList").textContent="Loading shops...";
+try{
+const q=query(collection(db,"shops"),
+where("approved","==",true),
+where("active","==",true));
+const snap=await getDocs(q);
+const list=el("shopsList");
+list.innerHTML="";
 
-  try {
-    const q = query(
-      collection(db,"shops"),
-      where("approved","==",true),
-      where("active","==",true)
-    );
-
-    const snap = await getDocs(q);
-    const list = el("shopsList");
-    list.innerHTML = "";
-
-    if (snap.empty) {
-      list.textContent = "No approved shops available yet.";
-      return;
-    }
-
-    snap.forEach(d => {
-      const s = d.data();
-      const div = document.createElement("div");
-      div.className = "item";
-
-      const title = document.createElement("h3");
-      title.textContent = s.name || "Shop";
-
-      const info = document.createElement("p");
-      info.textContent = (s.area || "") + " | " +
-        (s.address || "") + " | " + (s.phone || "");
-
-      const btn = document.createElement("button");
-      btn.textContent = "Place Order";
-      btn.onclick = () => placeOrder(d.id,s.name || "Shop");
-
-      div.append(title,info,btn);
-      list.appendChild(div);
-    });
-  } catch(error) {
-    el("shopsList").textContent = "Shop loading error: " + error.message;
-  }
+if(snap.empty){
+list.textContent="No approved shops available.";
+return;
 }
 
-async function placeOrder(shopId,shopName) {
-  const items = prompt("Enter food item and quantity:");
-  if (!items) return;
+snap.forEach(d=>{
+const s=d.data();
+const div=document.createElement("div");
+div.className="item";
 
-  const total = Number(prompt("Enter total amount in rupees:"));
-  if (!Number.isFinite(total) || total <= 0) {
-    alert("Enter a valid amount.");
-    return;
-  }
+const title=document.createElement("h3");
+title.textContent=s.name||"Shop";
 
-  const address = prompt("Enter delivery address:");
-  if (!address) return;
+const info=document.createElement("p");
+info.textContent=(s.area||"")+" | "+(s.address||"")+" | "+(s.phone||"");
 
-  try {
-    await addDoc(collection(db,"orders"),{
-      customerId:auth.currentUser.uid,
-      shopId,shopName,items,total,address,
-      status:"New",
-      createdAt:serverTimestamp()
-    });
-    alert("Order placed successfully!");
-    await loadMyOrders();
-  } catch(error) {
-    alert("Order error: " + error.message);
-  }
+div.append(title,info);
+
+const menu=s.menu||[];
+if(menu.length===0){
+const noMenu=document.createElement("p");
+noMenu.textContent="Menu not added yet.";
+div.appendChild(noMenu);
 }
 
-async function loadMyOrders() {
-  el("myOrdersList").textContent = "Loading orders...";
+menu.forEach((food,index)=>{
+if(food.available===false)return;
+const row=document.createElement("p");
+row.textContent=food.name+" — ₹"+food.price;
+div.appendChild(row);
 
-  try {
-    const q = query(
-      collection(db,"orders"),
-      where("customerId","==",auth.currentUser.uid)
-    );
-    const snap = await getDocs(q);
-    const list = el("myOrdersList");
-    list.innerHTML = "";
+const btn=document.createElement("button");
+btn.textContent="Order "+food.name;
+btn.onclick=()=>placeOrder(d.id,s.name||"Shop",food);
+div.appendChild(btn);
+});
 
-    if (snap.empty) {
-      list.textContent = "No orders yet.";
-      return;
-    }
-
-    snap.forEach(d => {
-      const o = d.data();
-      const div = document.createElement("div");
-      div.className = "item";
-      div.textContent =
-        (o.shopName || "") + " | " + (o.items || "") +
-        " | ₹" + o.total + " | " + o.status;
-      list.appendChild(div);
-    });
-  } catch(error) {
-    el("myOrdersList").textContent = error.message;
-  }
+list.appendChild(div);
+});
+}catch(e){
+el("shopsList").textContent="Error: "+e.message;
+}
 }
 
-async function loadAdmin() {
-  try {
-    const shops = await getDocs(collection(db,"shops"));
-    const shopList = el("adminShopsList");
-    shopList.innerHTML = "";
+async function placeOrder(shopId,shopName,food){
+const quantity=Number(prompt("Enter quantity:", "1"));
+if(!Number.isInteger(quantity)||quantity<1)return;
 
-    shops.forEach(d => {
-      const s = d.data();
-      const div = document.createElement("div");
-      div.className = "item";
+const address=prompt("Enter delivery address:");
+if(!address)return;
 
-      const info = document.createElement("p");
-      info.textContent = (s.name || "Shop") + " | " +
-        (s.area || "") + " | " +
-        (s.approved ? "Approved" : "Pending");
-      div.appendChild(info);
+const total=Number(food.price)*quantity;
 
-      if (!s.approved) {
-        const approve = document.createElement("button");
-        approve.textContent = "Approve Shop";
-        approve.onclick = () => approveShop(d.id);
-        div.appendChild(approve);
-      }
-
-      const remove = document.createElement("button");
-      remove.textContent = "Delete Shop";
-      remove.className = "secondary";
-      remove.onclick = () => removeShop(d.id);
-      div.appendChild(remove);
-
-      shopList.appendChild(div);
-    });
-
-    const orders = await getDocs(collection(db,"orders"));
-    const orderList = el("adminOrdersList");
-    orderList.innerHTML = "";
-
-    if (orders.empty) orderList.textContent = "No orders yet.";
-
-    orders.forEach(d => {
-      const o = d.data();
-      const div = document.createElement("div");
-      div.className = "item";
-
-      const info = document.createElement("p");
-      info.textContent = (o.shopName || "") + " | " +
-        (o.items || "") + " | ₹" + o.total + " | " +
-        (o.address || "") + " | " + o.status;
-      div.appendChild(info);
-
-      if (o.status !== "Completed") {
-        const btn = document.createElement("button");
-        btn.textContent = "Mark Completed";
-        btn.onclick = () => completeOrder(d.id);
-        div.appendChild(btn);
-      }
-
-      orderList.appendChild(div);
-    });
-  } catch(error) {
-    el("adminShopsList").textContent = "Admin error: " + error.message;
-    el("adminOrdersList").textContent = error.message;
-  }
+try{
+await addDoc(collection(db,"orders"),{
+customerId:auth.currentUser.uid,
+shopId,
+shopName,
+items:food.name+" x "+quantity,
+total,
+address,
+status:"New",
+createdAt:serverTimestamp()
+});
+alert("Order placed! Total: ₹"+total);
+await loadMyOrders();
+}catch(e){
+alert("Order error: "+e.message);
+}
 }
 
-async function approveShop(id) {
-  try {
-    await updateDoc(doc(db,"shops",id),{approved:true});
-    alert("Shop approved!");
-    await loadAdmin();
-    await loadShops();
-  } catch(error) {
-    alert(error.message);
-  }
+async function loadMyOrders(){
+el("myOrdersList").textContent="Loading...";
+try{
+const q=query(collection(db,"orders"),
+where("customerId","==",auth.currentUser.uid));
+const snap=await getDocs(q);
+const list=el("myOrdersList");
+list.innerHTML="";
+if(snap.empty){
+list.textContent="No orders yet.";
+return;
+}
+snap.forEach(d=>{
+const o=d.data();
+const div=document.createElement("div");
+div.className="item";
+div.textContent=(o.shopName||"")+" | "+o.items+
+" | ₹"+o.total+" | "+o.status;
+list.appendChild(div);
+});
+}catch(e){
+el("myOrdersList").textContent=e.message;
+}
 }
 
-async function removeShop(id) {
-  if (!confirm("Delete this shop?")) return;
+async function loadManageShops(){
+try{
+const snap=await getDocs(collection(db,"shops"));
+currentShops=[];
+const select=el("manageShopSelect");
+select.innerHTML='<option value="">Select shop</option>';
 
-  try {
-    await deleteDoc(doc(db,"shops",id));
-    await loadAdmin();
-    await loadShops();
-  } catch(error) {
-    alert(error.message);
-  }
+snap.forEach(d=>{
+const s=d.data();
+if(isAdmin()||s.ownerId===auth.currentUser.uid){
+currentShops.push({id:d.id,...s});
+const option=document.createElement("option");
+option.value=d.id;
+option.textContent=s.name+(s.approved?" (Approved)":" (Pending)");
+select.appendChild(option);
+}
+});
+}catch(e){
+el("menuMessage").textContent=e.message;
+}
 }
 
-async function completeOrder(id) {
-  try {
-    await updateDoc(doc(db,"orders",id),{status:"Completed"});
-    await loadAdmin();
-  } catch(error) {
-    alert(error.message);
-  }
-}
-
-el("shopRegisterButton").onclick = async () => {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const name = el("shopNameInput").value.trim();
-  const phone = el("shopPhoneInput").value.trim();
-  const address = el("shopAddressInput").value.trim();
-
-  if (!name || !phone || !address) {
-    el("shopMessage").textContent = "Fill in shop name, phone and address.";
-    return;
-  }
-
-  try {
-    await addDoc(collection(db,"shops"),{
-      name,
-      ownerName:el("ownerNameInput").value.trim(),
-      phone,address,
-      area:el("shopAreaInput").value,
-      ownerId:user.uid,
-      approved:false,
-      active:true,
-      menu:[],
-      createdAt:serverTimestamp()
-    });
-
-    el("shopMessage").textContent = "Shop submitted for approval.";
-    if (user.uid === ADMIN_UID) await loadAdmin();
-  } catch(error) {
-    el("shopMessage").textContent = error.message;
-  }
+el("manageShopSelect").onchange=()=>{
+selectedShopId=el("manageShopSelect").value;
+editingFoodId="";
+el("foodNameInput").value="";
+el("foodPriceInput").value="";
+el("saveFoodButton").textContent="Add Food Item";
+renderManageMenu();
 };
 
-el("addShopButton").onclick = async () => {
-  if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
-    alert("Admin access required.");
-    return;
-  }
+function renderManageMenu(){
+const list=el("manageMenuList");
+list.innerHTML="";
+const shop=currentShops.find(s=>s.id===selectedShopId);
+if(!shop){
+list.textContent="Select a shop first.";
+return;
+}
 
-  const name = el("newShopName").value.trim();
-  if (!name) {
-    alert("Enter shop name.");
-    return;
-  }
+const menu=shop.menu||[];
+if(menu.length===0){
+list.textContent="No food items yet.";
+return;
+}
 
-  try {
-    await addDoc(collection(db,"shops"),{
-      name,
-      phone:el("newShopPhone").value.trim(),
-      address:el("newShopAddress").value.trim(),
-      area:el("newShopArea").value,
-      ownerId:ADMIN_UID,
-      approved:true,
-      active:true,
-      menu:[],
-      createdAt:serverTimestamp()
-    });
+menu.forEach((food,index)=>{
+const div=document.createElement("div");
+div.className="item";
 
-    alert("Shop added successfully!");
-    await loadAdmin();
-    await loadShops();
-  } catch(error) {
-    alert("Error: " + error.message);
-  }
+const info=document.createElement("p");
+info.textContent=food.name+" — ₹"+food.price+
+" — "+(food.available===false?"Unavailable":"Available");
+div.appendChild(info);
+
+const edit=document.createElement("button");
+edit.textContent="Edit";
+edit.onclick=()=>{
+editingFoodId=food.id;
+el("foodNameInput").value=food.name;
+el("foodPriceInput").value=food.price;
+el("saveFoodButton").textContent="Save Changes";
+};
+div.appendChild(edit);
+
+const toggle=document.createElement("button");
+toggle.textContent=food.available===false?"Make Available":"Make Unavailable";
+toggle.className="secondary";
+toggle.onclick=()=>toggleFood(food.id);
+div.appendChild(toggle);
+
+const remove=document.createElement("button");
+remove.textContent="Delete";
+remove.className="danger";
+remove.onclick=()=>deleteFood(food.id);
+div.appendChild(remove);
+
+list.appendChild(div);
+});
+}
+
+function makeId(){
+return Date.now().toString()+"_"+Math.random().toString(36).slice(2,8);
+}
+
+el("saveFoodButton").onclick=async()=>{
+if(!selectedShopId){
+alert("Select a shop first.");
+return;
+}
+
+const name=el("foodNameInput").value.trim();
+const price=Number(el("foodPriceInput").value);
+
+if(!name||!Number.isFinite(price)||price<=0){
+alert("Enter a food name and valid price.");
+return;
+}
+
+const shop=currentShops.find(s=>s.id===selectedShopId);
+if(!shop)return;
+
+let menu=[...(shop.menu||[])];
+
+if(editingFoodId){
+menu=menu.map(f=>f.id===editingFoodId?
+{...f,name,price}:f);
+}else{
+menu.push({
+id:makeId(),
+name,
+price,
+available:true
+});
+}
+
+await saveMenu(menu);
 };
 
-</script>
-</body>
+async function saveMenu(menu){
+try{
+await updateDoc(doc(db,"shops",selectedShopId),{menu});
+el("menuMessage").textContent="Menu saved successfully!";
+editingFoodId="";
+el("foodNameInput").value="";
+el("foodPriceInput").value="";
+el("saveFoodButton").textContent="Add Food Item";
+await loadManageShops();
+el("manageShopSelect").value=selectedShopId;
+renderManageMenu();
+await loadShops();
+}catch(e){
+el("menuMessage").textContent="Save error: "+e.message;
+}
+}
+
+async function toggleFood(foodId){
+const shop=currentShops.find(s=>s.id===selectedShopId);
+if(!shop)return;
+const menu=(shop.menu||[]).map(f=>
+f.id===foodId?{...f,available:f.available===false}:f
+);
+await saveMenu(menu);
+}
+
+async function deleteFood(foodId){
+if(!confirm("Delete this food item?"))return;
+const shop=currentShops.find(s=>s.id===selectedShopId);
+if(!shop)return;
+const menu=(shop.menu||[]).filter(f=>f.id!==foodId);
+await saveMenu(menu);
+}
+
+async function loadAdmin(){
+try{
+const snap=await getDocs(collection(db,"shops"));
+const list=el("adminShopsList");
+list.innerHTML="";
+
+snap.forEach(d=>{
+const s=d.data();
+const div=document.createElement("div");
+div.className="item";
+
+const info=document.createElement("p");
+info.textContent=(s.name||"Shop")+" | "+(s.area||"")+
+" | "+(s.approved?"Approved":"Pending");
+div.appendChild(info);
+
+if(!s.approved){
+const approve=document.createElement("button");
+approve.textContent="Approve Shop";
+approve.onclick=()=>approveShop(d.id);
+div.appendChild(approve);
+}
+
+const remove=document.createElement("button");
+remove.textContent="Delete Shop";
+remove.className="danger";
+remove.onclick=()=>removeShop(d.id);
+div.appendChild(remove);
+list.appendChild(div);
+});
+
+const orders=await getDocs(collection(db,"orders"));
+const orderList=el("adminOrdersList");
+orderList.innerHTML="";
+if(orders.empty)orderList.textContent="No orders yet.";
+
+orders.forEach(d=>{
+const o=d.data();
+const div=document.createElement("div");
+div.className="item";
+const info=document.createElement("p");
+info.textContent=(o.shopName||"")+" | "+o.items+
+" | ₹"+o.total+" | "+o.address+" | "+o.status;
+div.appendChild(info);
+
+if(o.status!=="Completed"){
+const btn=document.createElement("button");
+btn.textContent="Mark Completed";
+btn.onclick=()=>completeOrder(d.id);
+div.appendChild(btn);
+}
+orderList.appendChild(div);
+});
+}catch(e){
+el("adminShopsList").textContent="Admin error: "+e.message;
+}
+}
+
+async function approveShop(id){
+try{
+await updateDoc(doc(db,"shops",id),{approved:true});
+alert("Shop approved!");
+await loadAdmin();
+await loadShops();
+await loadManageShops();
+}catch(e){alert(e.message);}
+}
+
+async function removeShop(id){
+if(!confirm("Delete this shop?"))return;
+try{
+await deleteDoc(doc(db,"shops",id));
+await loadAdmin();
+await loadShops();
+await loadManageShops();
+}catch(e){alert(e.message);}
+}
+
+async function completeOrder(id){
+try{
+await updateDoc(doc(db,"orders",id),{status:"Completed"});
+await loadAdmin();
+}catch(e){alert(e.message);}
+}
+
+el("addShopButton").onclick=async()=>{
+if(!isAdmin()){
+alert("Admin access required.");
+return;
+}
+const name=el("newShopName").value.trim();
+if(!name){alert("Enter shop name.");return;}
+
+try{
+await addDoc(collection(db,"shops"),{
+name,
+phone:el("newShopPhone").value.trim(),
+address:el("newShopAddress").value.trim(),
+area:el("newShopArea").value,
+ownerId:ADMIN_UID,
+approved:true,
+active:true,
+menu:[],
+createdAt:serverTimestamp()
+});
+alert("Shop added successfully!");
+await loadAdmin();
+await loadShops();
+await loadManageShops();
+}catch(e){alert(e.message);}
+};
+
+el("shopRegisterButton").onclick=async()=>{
+const user=auth.currentUser;
+if(!user)return;
+
+const name=el("shopNameInput").value.trim();
+const phone=el("shopPhoneInput").value.trim();
+const address=el("shopAddressInput").value.trim();
+
+if(!name||!phone||!address){
+el("shopMessage").textContent="Fill in shop name, phone and address.";
+return;
+}
+
+try{
+await addDoc(collection(db,"shops"),{
+name,
+ownerName:el("ownerNameInput").value.trim(),
+phone,
+address,
+area:el("shopAreaInput").value,
+ownerId:user.uid,
+approved:false,
+active:true,
+menu:[],
+createdAt:serverTimestamp()
+});
+el("shopMessage").textContent="Shop submitted for approval.";
+await loadManageShops();
+if(isAdmin())await loadAdmin();
+}catch(e){
+el("shopMessage").textContent=e.message;
+}
+};
+
+</script></body>
 </html>
